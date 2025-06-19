@@ -1,0 +1,18 @@
+meta {
+  name: Create Bank
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE_URL}}/banks
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "code": "341",
+    "name": "Itau Unibanco"
+  }
+}

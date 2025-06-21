@@ -25,6 +25,13 @@ class BankController(
     fun list(): List<Bank> = service.listAll()
 
     // TODO: Get by id
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getById(@PathParam("id") id: Long) : Response{
+        val response = service.getById(id)
+        return Response.ok().entity(response).build()
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -40,6 +47,8 @@ class BankController(
     // TODO: Update
     @PUT
     @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     fun update(@PathParam("id") id : Long, bankToBeUpdated: Bank): Response =
         service.update(id, bankToBeUpdated).run {
             Response.ok(this)

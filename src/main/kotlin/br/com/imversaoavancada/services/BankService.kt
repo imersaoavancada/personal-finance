@@ -15,6 +15,11 @@ class BankService(
 ) {
     fun listAll(): List<Bank> = repository.listAll()
 
+    fun getById(id: Long) : Bank{
+        return repository.findById(id)
+            ?: throw NotFoundException("Bank ID #$id not found!")
+    }
+
     @Transactional
     fun create(bank: Bank): Bank {
         repository.persist(bank)

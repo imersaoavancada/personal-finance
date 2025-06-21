@@ -4,6 +4,7 @@ import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.repositories.BankRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
+import jakarta.ws.rs.NotFoundException
 
 /**
  * @author Eduardo Folly
@@ -18,5 +19,16 @@ class BankService(
     fun create(bank: Bank): Bank {
         repository.persist(bank)
         return bank
+    }
+
+    @Transactional
+    fun update(id: Long, updatedBank: Bank): Bank {
+        val existingBank = repository.findById(id)
+            ?: throw NotFoundException("Bank ID #$id not found!")
+        existingBank.code = updatedBank.code
+        existingBank.name = updatedBank.name
+
+        repository.persist(existingBank)
+        return existingBank
     }
 }

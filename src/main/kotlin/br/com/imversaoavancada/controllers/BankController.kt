@@ -38,6 +38,14 @@ class BankController(
         }
 
     // TODO: Update
+    @PUT
+    @Path("/{id}")
+    fun update(@PathParam("id") id : Long, bankToBeUpdated: Bank): Response =
+        service.update(id, bankToBeUpdated).run {
+            Response.ok(this)
+                .entity(this)
+                .build()
+        }
 
     // TODO: Delete
 }

@@ -57,4 +57,10 @@ class BankController(
         }
 
     // TODO: Delete
+    @DELETE
+    @Path("{id}")
+    fun delete(@PathParam("id") id: Long) : Response{
+        service.delete(id)
+        return Response.noContent().build()
+    }
 }

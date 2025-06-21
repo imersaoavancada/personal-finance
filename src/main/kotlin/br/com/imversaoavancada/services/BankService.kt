@@ -36,4 +36,10 @@ class BankService(
         repository.persist(existingBank)
         return existingBank
     }
+
+    @Transactional
+    fun delete(id: Long){
+        val bankToBeDeleted = getById(id)
+        repository.delete(bankToBeDeleted)
+    }
 }

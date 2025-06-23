@@ -1,0 +1,22 @@
+meta {
+  name: Update Bank
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{BASE_URL}}/banks/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "code": "888",
+    "name": "Banco da Mentira"
+  }
+}

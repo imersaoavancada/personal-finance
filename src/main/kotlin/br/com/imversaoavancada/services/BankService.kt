@@ -13,6 +13,8 @@ import jakarta.ws.rs.NotFoundException
 class BankService(
     val repository: BankRepository,
 ) {
+    fun count(): Long = repository.count()
+
     fun listAll(): List<Bank> = repository.listAll()
 
     fun getById(id: Long): Bank =

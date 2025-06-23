@@ -16,7 +16,10 @@ class BankController(
 ) {
     private fun path(bank: Bank): URI = URI.create("/banks/${bank.id}")
 
-    // TODO: Count
+    @GET
+    @Path("/count")
+    @Produces(MediaType.TEXT_PLAIN)
+    fun count(): Long = service.count()
 
     // TODO: Search
     // TODO: Pagination

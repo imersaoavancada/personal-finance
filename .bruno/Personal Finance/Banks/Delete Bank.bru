@@ -1,0 +1,15 @@
+meta {
+  name: Delete Bank
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{BASE_URL}}/banks/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}

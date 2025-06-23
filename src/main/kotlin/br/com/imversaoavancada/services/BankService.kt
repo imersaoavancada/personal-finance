@@ -15,10 +15,9 @@ class BankService(
 ) {
     fun listAll(): List<Bank> = repository.listAll()
 
-    fun getById(id: Long) : Bank{
-        return repository.findById(id)
+    fun getById(id: Long): Bank =
+        repository.findById(id)
             ?: throw NotFoundException("Bank ID #$id not found!")
-    }
 
     @Transactional
     fun create(bank: Bank): Bank {
@@ -27,19 +26,22 @@ class BankService(
     }
 
     @Transactional
-    fun update(id: Long, updatedBank: Bank): Bank {
-        val existingBank = repository.findById(id)
-            ?: throw NotFoundException("Bank ID #$id not found!")
-        existingBank.code = updatedBank.code
-        existingBank.name = updatedBank.name
+    fun update(
+        id: Long,
+        bank: Bank,
+    ): Bank {
+        val persisted = getById(id)
 
-        repository.persist(existingBank)
-        return existingBank
+        persisted.code = bank.code
+        persisted.name = bank.name
+
+        repository.persist(persisted)
+
+        return persisted
     }
 
     @Transactional
-    fun delete(id: Long){
-        val bankToBeDeleted = getById(id)
-        repository.delete(bankToBeDeleted)
+    fun delete(id: Long) {
+        repository.delete(getById(id))
     }
 }

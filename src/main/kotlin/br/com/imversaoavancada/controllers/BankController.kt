@@ -24,14 +24,12 @@ class BankController(
     @Produces(MediaType.APPLICATION_JSON)
     fun list(): List<Bank> = service.listAll()
 
-    // TODO: Get by id
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    fun getById(@PathParam("id") id: Long) : Response{
-        val response = service.getById(id)
-        return Response.ok().entity(response).build()
-    }
+    fun getById(
+        @PathParam("id") id: Long,
+    ): Response = service.getById(id).run { Response.ok(this).build() }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -44,23 +42,18 @@ class BankController(
                 .build()
         }
 
-    // TODO: Update
     @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun update(@PathParam("id") id : Long, bankToBeUpdated: Bank): Response =
-        service.update(id, bankToBeUpdated).run {
-            Response.ok(this)
-                .entity(this)
-                .build()
-        }
+    fun update(
+        @PathParam("id") id: Long,
+        bank: Bank,
+    ): Response = service.update(id, bank).run { Response.ok(this).build() }
 
-    // TODO: Delete
     @DELETE
-    @Path("{id}")
-    fun delete(@PathParam("id") id: Long) : Response{
-        service.delete(id)
-        return Response.noContent().build()
-    }
+    @Path("/{id}")
+    fun delete(
+        @PathParam("id") id: Long,
+    ): Response = service.delete(id).let { Response.noContent().build() }
 }

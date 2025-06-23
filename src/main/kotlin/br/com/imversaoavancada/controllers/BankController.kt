@@ -5,6 +5,7 @@ import br.com.imversaoavancada.services.BankService
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.RestQuery
 import java.net.URI
 
 /**
@@ -19,13 +20,17 @@ class BankController(
     @GET
     @Path("/count")
     @Produces(MediaType.TEXT_PLAIN)
-    fun count(): Long = service.count()
+    fun count(
+        @RestQuery term: String?,
+    ): Long = service.count(term)
 
-    // TODO: Search
-    // TODO: Pagination
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    fun list(): List<Bank> = service.listAll()
+    fun list(
+        @RestQuery @DefaultValue("0") page: Int,
+        @RestQuery @DefaultValue("20") size: Int,
+        @RestQuery term: String?,
+    ): List<Bank> = service.listAll(page, size, term)
 
     @GET
     @Path("/{id}")

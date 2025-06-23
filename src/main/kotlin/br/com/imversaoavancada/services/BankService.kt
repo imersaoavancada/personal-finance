@@ -2,6 +2,7 @@ package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.repositories.BankRepository
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
@@ -13,9 +14,25 @@ import jakarta.ws.rs.NotFoundException
 class BankService(
     val repository: BankRepository,
 ) {
-    fun count(): Long = repository.count()
+    fun count(term: String?): Long = query(term).count()
 
-    fun listAll(): List<Bank> = repository.listAll()
+    fun listAll(
+        page: Int,
+        size: Int,
+        term: String?,
+    ): List<Bank> = query(term).page(page, size).list()
+
+    private fun query(term: String?): PanacheQuery<Bank> {
+        if (term.isNullOrBlank()) {
+            return repository.findAll()
+        }
+
+        return repository
+            .find(
+                "LOWER(code) LIKE ?1 OR LOWER(name) LIKE ?1",
+                "%${term.lowercase()}%",
+            )
+    }
 
     fun getById(id: Long): Bank =
         repository.findById(id)

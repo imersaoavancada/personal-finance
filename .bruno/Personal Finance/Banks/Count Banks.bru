@@ -5,11 +5,11 @@ meta {
 }
 
 get {
-  url: {{BASE_URL}}/banks/count
+  url: {{BASE_URL}}/banks/count?term=vazio
   body: none
   auth: inherit
 }
 
 params:query {
-  ~term: vazio
+  term: vazio
 }

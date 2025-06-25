@@ -1,8 +1,10 @@
 package br.com.imversaoavancada.controllers
 
+import br.com.imversaoavancada.entities.Bank
 import io.quarkus.test.common.http.TestHTTPEndpoint
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured
+import io.restassured.http.ContentType
 import io.restassured.module.kotlin.extensions.*
 import io.restassured.module.kotlin.extensions.Given
 import org.hamcrest.Matchers.*
@@ -66,9 +68,35 @@ class BankControllerTest {
         }
     }
 
-    // getById com id válido
 
-    // getById com id inválido
+    @Test
+    @DisplayName("Teste para obter um banco por ID válido")
+    fun getBankByIdValidTest(){
+        val bankId = 1L
+        val bankCode = "000"
+        val bankName = "Banco Vazio"
+
+        When {
+            get("/{id}", bankId)
+        } Then {
+            statusCode(200)
+            body("id", equalTo(bankId.toInt()))
+            body("code", equalTo(bankCode))
+            body("name", equalTo(bankName))
+        }
+    }
+
+    @Test
+    @DisplayName("Teste para obter um banco por ID Inválido")
+    fun getBankByIdInvalidTest(){
+        val invalidId = 999999L
+
+        When {
+            get("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
 
     // create
 

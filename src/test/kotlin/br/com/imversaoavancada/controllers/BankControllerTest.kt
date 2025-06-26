@@ -113,6 +113,8 @@ class BankControllerTest {
 
      */
 
+    // TODO: Get by invalid id
+
     @Test
     @Order(1)
     fun firstCountTest() {
@@ -139,7 +141,7 @@ class BankControllerTest {
 
     @Test
     @Order(3)
-    fun insertEmptyRequest() {
+    fun insertEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
         } When {
@@ -151,7 +153,7 @@ class BankControllerTest {
 
     @Test
     @Order(4)
-    fun insertEmptyObjectRequest() {
+    fun insertEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
             body(mapOf<String, Any?>())
@@ -173,7 +175,7 @@ class BankControllerTest {
 
     @Test
     @Order(5)
-    fun insertNullObjectRequest() {
+    fun insertNullValuesTest() {
         Given {
             contentType(ContentType.JSON)
             body(
@@ -200,7 +202,7 @@ class BankControllerTest {
 
     @Test
     @Order(6)
-    fun insertEmptyValuesRequest() {
+    fun insertEmptyValuesTest() {
         Given {
             contentType(ContentType.JSON)
             body(
@@ -233,7 +235,7 @@ class BankControllerTest {
 
     @Test
     @Order(7)
-    fun insertBlankValuesRequest() {
+    fun insertBlankValuesTest() {
         Given {
             contentType(ContentType.JSON)
             body(
@@ -265,7 +267,7 @@ class BankControllerTest {
 
     @Test
     @Order(8)
-    fun insertWrongValuesRequest() {
+    fun insertWrongValuesTest() {
         Given {
             contentType(ContentType.JSON)
             body(
@@ -296,7 +298,7 @@ class BankControllerTest {
 
     @Test
     @Order(9)
-    fun insertSuccessRequest() {
+    fun insertSuccessTest() {
         val code = "8".repeat(3)
         val name = "A".repeat(150)
 
@@ -342,7 +344,7 @@ class BankControllerTest {
 
     @Test
     @Order(11)
-    fun getBankByIdValidTest() {
+    fun getByIdValidTest() {
         When {
             get("/{id}", bank.id)
         } Then {

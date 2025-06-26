@@ -2,6 +2,7 @@ package br.com.imversaoavancada.controllers
 
 import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.services.BankService
+import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -42,13 +43,17 @@ class BankController(
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun create(body: Bank): Response =
-        service.create(body).run {
-            Response
-                .created(path(this))
-                .entity(this)
-                .build()
-        }
+    fun create(
+        @Valid body: Bank?,
+    ): Response =
+        body?.let {
+            service.create(it).run {
+                Response
+                    .created(path(this))
+                    .entity(this)
+                    .build()
+            }
+        } ?: Response.status(400).build()
 
     @PUT
     @Path("/{id}")
@@ -56,8 +61,13 @@ class BankController(
     @Produces(MediaType.APPLICATION_JSON)
     fun update(
         @PathParam("id") id: Long,
-        bank: Bank,
-    ): Response = service.update(id, bank).run { Response.ok(this).build() }
+        @Valid body: Bank?,
+    ): Response =
+        body?.let {
+            service.update(id, it).run {
+                Response.ok(this).build()
+            }
+        } ?: Response.status(400).build()
 
     @DELETE
     @Path("/{id}")

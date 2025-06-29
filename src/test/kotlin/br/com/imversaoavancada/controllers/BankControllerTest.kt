@@ -625,7 +625,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(25)
     fun deleteAlreadyDeletedBankTest() {
         When {
             delete("/{id}", bank.id)
@@ -635,7 +635,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(28)
+    @Order(26)
     fun finalCountTest() {
         When {
             get("/count")
@@ -647,7 +647,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(29)
+    @Order(27)
     fun finalListTest() {
     When {
             get()

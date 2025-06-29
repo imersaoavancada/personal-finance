@@ -83,7 +83,7 @@ class BankControllerTest {
 
     companion object {
         var count = 2
-        val invalidId = 999999
+        var invalidId = 999999
         var newCode = "112"
         var newName = "Banco Atualizado"
         lateinit var bank: Bank

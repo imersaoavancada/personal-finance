@@ -9,6 +9,8 @@ import io.restassured.http.ContentType
 import io.restassured.module.kotlin.extensions.*
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 /**
  * @author Eduardo Folly
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.*
 @TestHTTPEndpoint(BankController::class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class BankControllerTest {
+    // Create Maps
     val nameNotBlankError =
         mapOf(
             "field" to "create.body.name",
@@ -47,8 +50,42 @@ class BankControllerTest {
             "message" to "size_between:1:150",
         )
 
+    // Update Maps
+    val updateNameNotBlankError =
+        mapOf(
+            "field" to "update.body.name",
+            "message" to "not_blank",
+        )
+
+    val updateCodeNotBlankError =
+        mapOf(
+            "field" to "update.body.code",
+            "message" to "not_blank",
+        )
+
+    val updateCodeOnlyNumbersError =
+        mapOf(
+            "field" to "update.body.code",
+            "message" to "only_numbers",
+        )
+
+    val updateCodeSizeEqualError =
+        mapOf(
+            "field" to "update.body.code",
+            "message" to "size_equal:3",
+        )
+
+    val updateNameSizeBetweenError =
+        mapOf(
+            "field" to "update.body.name",
+            "message" to "size_between:1:150",
+        )
+
     companion object {
         var count = 2
+        val invalidId = 999999
+        var newCode = "112"
+        var newName = "Banco Atualizado"
         lateinit var bank: Bank
 
         @BeforeAll
@@ -353,25 +390,258 @@ class BankControllerTest {
         }
     }
 
-    // Verificar se a operação anterior está correta
+    @Test
+    @Order(12)
+    fun getByIdInvalidTest() {
 
-    // update
+        When {
+            get("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
 
-    // Verificar se a operação anterior está correta
+    @Test
+    @Order(13)
+    fun updateValidTest() {
+        val newBank = Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to newCode,
+                    "name" to newName,
+                ),
+            )
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "id",
+                equalTo(bank.id?.toInt()),
+                "code",
+                equalTo(newCode),
+                "name",
+                equalTo(newName),
+            )
+        } Extract {
+            body().parse(Bank::class)
+        }
 
-    // delete
+        bank.code = newBank.code
+        bank.name = newBank.name
+    }
 
-    // Verificar se a operação anterior está correta
+    @Test
+    @Order(14)
+    fun CheckUpdateTest() {
+        When {
+            get("/{id}", bank.id)
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body("$", equalTo(bank.toMap()))
+        }
+    }
 
-//    @Test
-//    @DisplayName("Teste para obter um banco por ID Inválido")
-//    fun getBankByIdInvalidTest(){
-//        val invalidId = 999999L
-//
-//        When {
-//            get("/{id}", invalidId)
-//        } Then {
-//            statusCode(404)
-//        }
-//    }
+    @Test
+    @Order(15)
+    fun updateInvalidIdTest() {
+
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to "123",
+                    "name" to "Banco Teste",
+                ),
+            )
+        } When {
+            put("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(16)
+    fun updateEmptyBodyTest() {
+        Given {
+            contentType(ContentType.JSON)
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+        }
+    }
+
+    @Test
+    @Order(17)
+    fun updateEmptyObjectTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(mapOf<String, Any?>())
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(2),
+                "violations",
+                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            )
+        }
+    }
+
+    @Test
+    @Order(18)
+    fun updateNullValuesTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to null,
+                    "name" to null,
+                ),
+            )
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(2),
+                "violations",
+                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["ABC", "12A", "@#$", "1234", "12", "", " "])
+    @Order(19)
+    fun updateInvalidCodeTest(invalidCode: String) {
+        Given {
+            contentType(ContentType.JSON)
+            body(mapOf("code" to invalidCode, "name" to "Banco Atualizado"))
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            body("violations.field", hasItem(containsString("update.body.code")))
+        }
+    }
+
+    @Test
+    @Order(20)
+    fun updateInvalidNameTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to "123",
+                    "name" to "A".repeat(151),
+                ),
+            )
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations",
+                hasItems(updateNameSizeBetweenError),
+            )
+        }
+    }
+
+    @Test
+    @Order(21)
+    fun thirdCountTest() {
+        When {
+            get("/count")
+        } Then {
+            statusCode(200)
+            contentType(ContentType.TEXT)
+            body(equalTo("$count"))
+        }
+    }
+
+    @Test
+    @Order(22)
+    fun deleteValidTest() {
+        When {
+            delete("/{id}", bank.id)
+        } Then {
+            statusCode(204)
+        }
+        count--
+    }
+
+    @Test
+    @Order(23)
+    fun fourthCountTest() {
+        When {
+            get("/count")
+        } Then {
+            statusCode(200)
+            contentType(ContentType.TEXT)
+            body(equalTo("$count"))
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
+    @Order(24)
+    fun deleteInvalidTest(invalidId: String) {
+        When {
+            delete("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(26)
+    fun deleteAlreadyDeletedBankTest() {
+        When {
+            delete("/{id}", bank.id)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(28)
+    fun finalCountTest() {
+        When {
+            get("/count")
+        } Then {
+            statusCode(200)
+            contentType(ContentType.TEXT)
+            body(equalTo("2"))
+        }
+    }
+
+    @Test
+    @Order(29)
+    fun finalListTest() {
+    When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body("size()", equalTo(2))
+        }
+    }
 }

@@ -406,7 +406,6 @@ class BankControllerTest {
     @Test
     @Order(12)
     fun getByIdInvalidTest() {
-
         When {
             get("/{id}", invalidId)
         } Then {
@@ -417,30 +416,31 @@ class BankControllerTest {
     @Test
     @Order(13)
     fun updateValidTest() {
-        val newBank = Given {
-            contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to newCode,
-                    "name" to newName,
-                ),
-            )
-        } When {
-            put("/{id}", bank.id)
-        } Then {
-            statusCode(200)
-            contentType(ContentType.JSON)
-            body(
-                "id",
-                equalTo(bank.id?.toInt()),
-                "code",
-                equalTo(newCode),
-                "name",
-                equalTo(newName),
-            )
-        } Extract {
-            body().parse(Bank::class)
-        }
+        val newBank =
+            Given {
+                contentType(ContentType.JSON)
+                body(
+                    mapOf<String, Any?>(
+                        "code" to newCode,
+                        "name" to newName,
+                    ),
+                )
+            } When {
+                put("/{id}", bank.id)
+            } Then {
+                statusCode(200)
+                contentType(ContentType.JSON)
+                body(
+                    "id",
+                    equalTo(bank.id?.toInt()),
+                    "code",
+                    equalTo(newCode),
+                    "name",
+                    equalTo(newName),
+                )
+            } Extract {
+                body().parse(Bank::class)
+            }
 
         bank.code = newBank.code
         bank.name = newBank.name
@@ -448,7 +448,7 @@ class BankControllerTest {
 
     @Test
     @Order(14)
-    fun CheckUpdateTest() {
+    fun checkUpdateTest() {
         When {
             get("/{id}", bank.id)
         } Then {
@@ -461,7 +461,6 @@ class BankControllerTest {
     @Test
     @Order(15)
     fun updateInvalidIdTest() {
-
         Given {
             contentType(ContentType.JSON)
             body(
@@ -549,7 +548,10 @@ class BankControllerTest {
             put("/{id}", bank.id)
         } Then {
             statusCode(400)
-            body("violations.field", hasItem(containsString("update.body.code")))
+            body(
+                "violations.field",
+                hasItem(containsString("update.body.code")),
+            )
         }
     }
 
@@ -649,7 +651,7 @@ class BankControllerTest {
     @Test
     @Order(27)
     fun finalListTest() {
-    When {
+        When {
             get()
         } Then {
             statusCode(200)

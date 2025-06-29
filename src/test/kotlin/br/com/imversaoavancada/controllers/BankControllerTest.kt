@@ -147,10 +147,23 @@ class BankControllerTest {
     3.6.2) Nome inválido. Maior que 150 caracteres.
     3.7) Requisição correta.
 
+    4) Atualizar o banco criado
+    4.1) Checar se atualizou
+    4.2) Atualizar com o mesmo objeto
+    4.3) Atualizar com o objeto vazio
+    4.4) Atualizar com o objeto nulo
+    4.5) Atualizar com o código inválido
+    4.6) Atualizar com o nome inválido
+
+    5) Deletar o banco
+    5.1) Checar se deletou
+    5.2) Deletar novamente o banco que já foi deletado
+    5.3) Deletar com id inválido
+
+    6) Contar quantos registros tem.
+    7) Listar todos os registros.
 
      */
-
-    // TODO: Get by invalid id
 
     @Test
     @Order(1)

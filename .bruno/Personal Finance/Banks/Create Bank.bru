@@ -16,3 +16,7 @@ body:json {
     "name": "Banco da Verdade"
   }
 }
+
+script:post-response {
+  bru.setVar('bank_id', res.getBody().id)
+}

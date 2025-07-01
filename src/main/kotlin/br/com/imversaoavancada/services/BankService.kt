@@ -36,7 +36,7 @@ class BankService(
 
     fun getById(id: Long): Bank =
         repository.findById(id)
-            ?: throw NotFoundException("Bank ID #$id not found!")
+            ?: throw NotFoundException() // TODO: Create a error object.
 
     @Transactional
     fun create(bank: Bank): Bank {

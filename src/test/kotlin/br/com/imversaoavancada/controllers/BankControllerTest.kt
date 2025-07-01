@@ -10,6 +10,7 @@ import io.restassured.module.kotlin.extensions.*
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullAndEmptySource
 import org.junit.jupiter.params.provider.ValueSource
 
 /**
@@ -63,17 +64,17 @@ class BankControllerTest {
             "message" to "not_blank",
         )
 
-    val updateCodeOnlyNumbersError =
-        mapOf(
-            "field" to "update.body.code",
-            "message" to "only_numbers",
-        )
+//    val updateCodeOnlyNumbersError =
+//        mapOf(
+//            "field" to "update.body.code",
+//            "message" to "only_numbers",
+//        )
 
-    val updateCodeSizeEqualError =
-        mapOf(
-            "field" to "update.body.code",
-            "message" to "size_equal:3",
-        )
+//    val updateCodeSizeEqualError =
+//        mapOf(
+//            "field" to "update.body.code",
+//            "message" to "size_equal:3",
+//        )
 
     val updateNameSizeBetweenError =
         mapOf(
@@ -83,9 +84,7 @@ class BankControllerTest {
 
     companion object {
         var count = 2
-        var invalidId = 999999
-        var newCode = "112"
-        var newName = "Banco Atualizado"
+        var invalidId = -1
         lateinit var bank: Bank
 
         @BeforeAll
@@ -106,8 +105,6 @@ class BankControllerTest {
     Ordem:
     1) Contar quantos registros tem.
     2) Listar todos os registros.
-
-
 
     3) Criar um banco
 
@@ -167,6 +164,16 @@ class BankControllerTest {
 
     @Test
     @Order(1)
+    fun getByIdInvalidTest() {
+        When {
+            get("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(2)
     fun firstCountTest() {
         When {
             get("/count")
@@ -178,7 +185,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     fun firstListTest() {
         When {
             get()
@@ -190,7 +197,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     fun insertEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -202,7 +209,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     fun insertEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -224,7 +231,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     fun insertNullValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -251,7 +258,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     fun insertEmptyValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -284,7 +291,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     fun insertBlankValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -316,7 +323,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     fun insertWrongValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -347,7 +354,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     fun insertSuccessTest() {
         val code = "8".repeat(3)
         val name = "A".repeat(150)
@@ -381,7 +388,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     fun secondCountTest() {
         When {
             get("/count")
@@ -393,7 +400,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     fun getByIdValidTest() {
         When {
             get("/{id}", bank.id)
@@ -403,63 +410,11 @@ class BankControllerTest {
         }
     }
 
-    @Test
-    @Order(12)
-    fun getByIdInvalidTest() {
-        When {
-            get("/{id}", invalidId)
-        } Then {
-            statusCode(404)
-        }
-    }
-
+    /*
+     * Update
+     */
     @Test
     @Order(13)
-    fun updateValidTest() {
-        val newBank =
-            Given {
-                contentType(ContentType.JSON)
-                body(
-                    mapOf<String, Any?>(
-                        "code" to newCode,
-                        "name" to newName,
-                    ),
-                )
-            } When {
-                put("/{id}", bank.id)
-            } Then {
-                statusCode(200)
-                contentType(ContentType.JSON)
-                body(
-                    "id",
-                    equalTo(bank.id?.toInt()),
-                    "code",
-                    equalTo(newCode),
-                    "name",
-                    equalTo(newName),
-                )
-            } Extract {
-                body().parse(Bank::class)
-            }
-
-        bank.code = newBank.code
-        bank.name = newBank.name
-    }
-
-    @Test
-    @Order(14)
-    fun checkUpdateTest() {
-        When {
-            get("/{id}", bank.id)
-        } Then {
-            statusCode(200)
-            contentType(ContentType.JSON)
-            body("$", equalTo(bank.toMap()))
-        }
-    }
-
-    @Test
-    @Order(15)
     fun updateInvalidIdTest() {
         Given {
             contentType(ContentType.JSON)
@@ -477,7 +432,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(16)
+    @Order(14)
     fun updateEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -489,7 +444,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(17)
+    @Order(15)
     fun updateEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -511,7 +466,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(18)
+    @Order(16)
     fun updateNullValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -538,9 +493,11 @@ class BankControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["ABC", "12A", "@#$", "1234", "12", "", " "])
-    @Order(19)
-    fun updateInvalidCodeTest(invalidCode: String) {
+    // TODO: Pode melhorar!
+    @NullAndEmptySource
+    @ValueSource(strings = [" ", "ABC", "12A", "@#$", "1234", "12"])
+    @Order(17)
+    fun updateInvalidCodeTest(invalidCode: String?) {
         Given {
             contentType(ContentType.JSON)
             body(mapOf("code" to invalidCode, "name" to "Banco Atualizado"))
@@ -556,7 +513,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(20)
+    @Order(18)
     fun updateInvalidNameTest() {
         Given {
             contentType(ContentType.JSON)
@@ -581,7 +538,40 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(21)
+    @Order(19)
+    fun updateSuccessTest() {
+        val code = "7".repeat(3)
+        val name = "B".repeat(150)
+
+        bank =
+            Given {
+                contentType(ContentType.JSON)
+                body(
+                    mapOf<String, Any?>(
+                        "code" to code,
+                        "name" to name,
+                    ),
+                )
+            } When {
+                put("/{id}", bank.id)
+            } Then {
+                statusCode(200)
+                contentType(ContentType.JSON)
+                body(
+                    "id",
+                    equalTo(bank.id?.toInt()),
+                    "code",
+                    equalTo(code),
+                    "name",
+                    equalTo(name),
+                )
+            } Extract {
+                body().parse(Bank::class)
+            }
+    }
+
+    @Test
+    @Order(20)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -593,7 +583,33 @@ class BankControllerTest {
     }
 
     @Test
+    @Order(21)
+    fun checkUpdateTest() {
+        When {
+            get("/{id}", bank.id)
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body("$", equalTo(bank.toMap()))
+        }
+    }
+
+    /*
+     * Delete
+     */
+    @ParameterizedTest
+    @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
     @Order(22)
+    fun deleteInvalidTest(invalidId: String) {
+        When {
+            delete("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(23)
     fun deleteValidTest() {
         When {
             delete("/{id}", bank.id)
@@ -604,7 +620,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(23)
+    @Order(24)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -615,20 +631,9 @@ class BankControllerTest {
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
-    @Order(24)
-    fun deleteInvalidTest(invalidId: String) {
-        When {
-            delete("/{id}", invalidId)
-        } Then {
-            statusCode(404)
-        }
-    }
-
     @Test
     @Order(25)
-    fun deleteAlreadyDeletedBankTest() {
+    fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", bank.id)
         } Then {
@@ -638,25 +643,13 @@ class BankControllerTest {
 
     @Test
     @Order(26)
-    fun finalCountTest() {
-        When {
-            get("/count")
-        } Then {
-            statusCode(200)
-            contentType(ContentType.TEXT)
-            body(equalTo("2"))
-        }
-    }
-
-    @Test
-    @Order(27)
     fun finalListTest() {
         When {
             get()
         } Then {
             statusCode(200)
             contentType(ContentType.JSON)
-            body("size()", equalTo(2))
+            body("size()", equalTo(count))
         }
     }
 }

@@ -9,6 +9,9 @@ import io.restassured.http.ContentType
 import io.restassured.module.kotlin.extensions.*
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullAndEmptySource
+import org.junit.jupiter.params.provider.ValueSource
 
 /**
  * @author Eduardo Folly
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.*
 @TestHTTPEndpoint(BankController::class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class BankControllerTest {
+    // Create Maps
     val nameNotBlankError =
         mapOf(
             "field" to "create.body.name",
@@ -47,8 +51,40 @@ class BankControllerTest {
             "message" to "size_between:1:150",
         )
 
+    // Update Maps
+    val updateNameNotBlankError =
+        mapOf(
+            "field" to "update.body.name",
+            "message" to "not_blank",
+        )
+
+    val updateCodeNotBlankError =
+        mapOf(
+            "field" to "update.body.code",
+            "message" to "not_blank",
+        )
+
+//    val updateCodeOnlyNumbersError =
+//        mapOf(
+//            "field" to "update.body.code",
+//            "message" to "only_numbers",
+//        )
+
+//    val updateCodeSizeEqualError =
+//        mapOf(
+//            "field" to "update.body.code",
+//            "message" to "size_equal:3",
+//        )
+
+    val updateNameSizeBetweenError =
+        mapOf(
+            "field" to "update.body.name",
+            "message" to "size_between:1:150",
+        )
+
     companion object {
         var count = 2
+        var invalidId = -1
         lateinit var bank: Bank
 
         @BeforeAll
@@ -69,8 +105,6 @@ class BankControllerTest {
     Ordem:
     1) Contar quantos registros tem.
     2) Listar todos os registros.
-
-
 
     3) Criar um banco
 
@@ -110,13 +144,36 @@ class BankControllerTest {
     3.6.2) Nome inválido. Maior que 150 caracteres.
     3.7) Requisição correta.
 
+    4) Atualizar o banco criado
+    4.1) Checar se atualizou
+    4.2) Atualizar com o mesmo objeto
+    4.3) Atualizar com o objeto vazio
+    4.4) Atualizar com o objeto nulo
+    4.5) Atualizar com o código inválido
+    4.6) Atualizar com o nome inválido
+
+    5) Deletar o banco
+    5.1) Checar se deletou
+    5.2) Deletar novamente o banco que já foi deletado
+    5.3) Deletar com id inválido
+
+    6) Contar quantos registros tem.
+    7) Listar todos os registros.
 
      */
 
-    // TODO: Get by invalid id
-
     @Test
     @Order(1)
+    fun getByIdInvalidTest() {
+        When {
+            get("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(2)
     fun firstCountTest() {
         When {
             get("/count")
@@ -128,7 +185,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     fun firstListTest() {
         When {
             get()
@@ -140,7 +197,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     fun insertEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -152,7 +209,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     fun insertEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -174,7 +231,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     fun insertNullValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -201,7 +258,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     fun insertEmptyValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -234,7 +291,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     fun insertBlankValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -266,7 +323,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     fun insertWrongValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -297,7 +354,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     fun insertSuccessTest() {
         val code = "8".repeat(3)
         val name = "A".repeat(150)
@@ -331,7 +388,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     fun secondCountTest() {
         When {
             get("/count")
@@ -343,7 +400,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     fun getByIdValidTest() {
         When {
             get("/{id}", bank.id)
@@ -353,25 +410,246 @@ class BankControllerTest {
         }
     }
 
-    // Verificar se a operação anterior está correta
+    /*
+     * Update
+     */
+    @Test
+    @Order(13)
+    fun updateInvalidIdTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to "123",
+                    "name" to "Banco Teste",
+                ),
+            )
+        } When {
+            put("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
 
-    // update
+    @Test
+    @Order(14)
+    fun updateEmptyBodyTest() {
+        Given {
+            contentType(ContentType.JSON)
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+        }
+    }
 
-    // Verificar se a operação anterior está correta
+    @Test
+    @Order(15)
+    fun updateEmptyObjectTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(mapOf<String, Any?>())
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(2),
+                "violations",
+                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            )
+        }
+    }
 
-    // delete
+    @Test
+    @Order(16)
+    fun updateNullValuesTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to null,
+                    "name" to null,
+                ),
+            )
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(2),
+                "violations",
+                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            )
+        }
+    }
 
-    // Verificar se a operação anterior está correta
+    @ParameterizedTest
+    // TODO: Pode melhorar!
+    @NullAndEmptySource
+    @ValueSource(strings = [" ", "ABC", "12A", "@#$", "1234", "12"])
+    @Order(17)
+    fun updateInvalidCodeTest(invalidCode: String?) {
+        Given {
+            contentType(ContentType.JSON)
+            body(mapOf("code" to invalidCode, "name" to "Banco Atualizado"))
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            body(
+                "violations.field",
+                hasItem(containsString("update.body.code")),
+            )
+        }
+    }
 
-//    @Test
-//    @DisplayName("Teste para obter um banco por ID Inválido")
-//    fun getBankByIdInvalidTest(){
-//        val invalidId = 999999L
-//
-//        When {
-//            get("/{id}", invalidId)
-//        } Then {
-//            statusCode(404)
-//        }
-//    }
+    @Test
+    @Order(18)
+    fun updateInvalidNameTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to "123",
+                    "name" to "A".repeat(151),
+                ),
+            )
+        } When {
+            put("/{id}", bank.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations",
+                hasItems(updateNameSizeBetweenError),
+            )
+        }
+    }
+
+    @Test
+    @Order(19)
+    fun updateSuccessTest() {
+        val code = "7".repeat(3)
+        val name = "B".repeat(150)
+
+        bank =
+            Given {
+                contentType(ContentType.JSON)
+                body(
+                    mapOf<String, Any?>(
+                        "code" to code,
+                        "name" to name,
+                    ),
+                )
+            } When {
+                put("/{id}", bank.id)
+            } Then {
+                statusCode(200)
+                contentType(ContentType.JSON)
+                body(
+                    "id",
+                    equalTo(bank.id?.toInt()),
+                    "code",
+                    equalTo(code),
+                    "name",
+                    equalTo(name),
+                )
+            } Extract {
+                body().parse(Bank::class)
+            }
+    }
+
+    @Test
+    @Order(20)
+    fun thirdCountTest() {
+        When {
+            get("/count")
+        } Then {
+            statusCode(200)
+            contentType(ContentType.TEXT)
+            body(equalTo("$count"))
+        }
+    }
+
+    @Test
+    @Order(21)
+    fun checkUpdateTest() {
+        When {
+            get("/{id}", bank.id)
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body("$", equalTo(bank.toMap()))
+        }
+    }
+
+    /*
+     * Delete
+     */
+    @ParameterizedTest
+    @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
+    @Order(22)
+    fun deleteInvalidTest(invalidId: String) {
+        When {
+            delete("/{id}", invalidId)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(23)
+    fun deleteValidTest() {
+        When {
+            delete("/{id}", bank.id)
+        } Then {
+            statusCode(204)
+        }
+        count--
+    }
+
+    @Test
+    @Order(24)
+    fun fourthCountTest() {
+        When {
+            get("/count")
+        } Then {
+            statusCode(200)
+            contentType(ContentType.TEXT)
+            body(equalTo("$count"))
+        }
+    }
+
+    @Test
+    @Order(25)
+    fun deleteAlreadyDeletedTest() {
+        When {
+            delete("/{id}", bank.id)
+        } Then {
+            statusCode(404)
+        }
+    }
+
+    @Test
+    @Order(26)
+    fun finalListTest() {
+        When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body("size()", equalTo(count))
+        }
+    }
 }

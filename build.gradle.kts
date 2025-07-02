@@ -50,16 +50,6 @@ tasks.withType<Test> {
         "java.util.logging.manager",
         "org.jboss.logmanager.LogManager",
     )
-
-    testLogging {
-        events(
-            "PASSED",
-            "SKIPPED",
-            "FAILED",
-            "STANDARD_OUT",
-            "STANDARD_ERROR",
-        )
-    }
 }
 
 allOpen {

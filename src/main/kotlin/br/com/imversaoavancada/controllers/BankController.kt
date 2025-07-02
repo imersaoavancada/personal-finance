@@ -2,9 +2,11 @@ package br.com.imversaoavancada.controllers
 
 import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.services.BankService
+import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.RestQuery
 import java.net.URI
 
 /**
@@ -16,13 +18,20 @@ class BankController(
 ) {
     private fun path(bank: Bank): URI = URI.create("/banks/${bank.id}")
 
-    // TODO: Count
+    @GET
+    @Path("/count")
+    @Produces(MediaType.TEXT_PLAIN)
+    fun count(
+        @RestQuery term: String?,
+    ): Long = service.count(term)
 
-    // TODO: Search
-    // TODO: Pagination
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    fun list(): List<Bank> = service.listAll()
+    fun list(
+        @RestQuery @DefaultValue("0") page: Int,
+        @RestQuery @DefaultValue("20") size: Int,
+        @RestQuery term: String?,
+    ): List<Bank> = service.listAll(page, size, term)
 
     @GET
     @Path("/{id}")
@@ -34,13 +43,17 @@ class BankController(
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun create(body: Bank): Response =
-        service.create(body).run {
-            Response
-                .created(path(this))
-                .entity(this)
-                .build()
-        }
+    fun create(
+        @Valid body: Bank?,
+    ): Response =
+        body?.let {
+            service.create(it).run {
+                Response
+                    .created(path(this))
+                    .entity(this)
+                    .build()
+            }
+        } ?: Response.status(400).build()
 
     @PUT
     @Path("/{id}")
@@ -48,8 +61,13 @@ class BankController(
     @Produces(MediaType.APPLICATION_JSON)
     fun update(
         @PathParam("id") id: Long,
-        bank: Bank,
-    ): Response = service.update(id, bank).run { Response.ok(this).build() }
+        @Valid body: Bank?,
+    ): Response =
+        body?.let {
+            service.update(id, it).run {
+                Response.ok(this).build()
+            }
+        } ?: Response.status(400).build()
 
     @DELETE
     @Path("/{id}")

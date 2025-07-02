@@ -51,6 +51,12 @@ class BankControllerTest {
             "message" to "size_between:1:150",
         )
 
+    val uniqueCodeError =
+        mapOf(
+            "field" to "banks_code_key",
+            "message" to "constraint_violation_exception",
+        )
+
     // Update Maps
     val updateNameNotBlankError =
         mapOf(
@@ -93,74 +99,6 @@ class BankControllerTest {
             RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
         }
     }
-
-    /*
-
-    Ordem para execução dos testes. (Manifesto de Testes)
-
-    - Definições iniciais - Premissas
-    1) Quantos registros o banco de dados inicia?
-    2) Uma área para definição de objetos?
-
-    Ordem:
-    1) Contar quantos registros tem.
-    2) Listar todos os registros.
-
-    3) Criar um banco
-
-    3.1) Requisição vazia?
-         body:
-
-    3.2) Requisição com o objeto vazio?
-         body: { }
-         kotlin: mapOf<String, Any?>()
-
-    3.3) Requisição com objeto nulo?
-         body: {
-                  "code": null,
-                  "name": null,
-               }
-
-         kotlin: mapOf<String, Any?>("code" to null, "name" to null)
-
-    3.4) ????
-         body: {
-                  "code": "",
-                  "name": "",
-               }
-
-         kotlin: mapOf<String, Any?>("code" to "", "name" to "")
-
-    3.5) ????
-         body: {
-                  "code": " ",
-                  "name": " ",
-               }
-
-         kotlin: mapOf<String, Any?>("code" to " ", "name" to " ")
-
-    3.6) Requisição com problemas de validação?
-    3.6.1) Código inválido. Maior que 3 caracteres.
-    3.6.2) Nome inválido. Maior que 150 caracteres.
-    3.7) Requisição correta.
-
-    4) Atualizar o banco criado
-    4.1) Checar se atualizou
-    4.2) Atualizar com o mesmo objeto
-    4.3) Atualizar com o objeto vazio
-    4.4) Atualizar com o objeto nulo
-    4.5) Atualizar com o código inválido
-    4.6) Atualizar com o nome inválido
-
-    5) Deletar o banco
-    5.1) Checar se deletou
-    5.2) Deletar novamente o banco que já foi deletado
-    5.3) Deletar com id inválido
-
-    6) Contar quantos registros tem.
-    7) Listar todos os registros.
-
-     */
 
     @Test
     @Order(1)
@@ -387,8 +325,39 @@ class BankControllerTest {
         count++
     }
 
+    // https://github.com/imersaoavancada/personal-finance/issues/8
     @Test
     @Order(11)
+    fun insertDuplicatedTest() {
+        val code = "8".repeat(3)
+        val name = "A".repeat(150)
+
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "code" to code,
+                    "name" to name,
+                ),
+            )
+        } When {
+            post()
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(1),
+                "violations",
+                hasItem(uniqueCodeError),
+            )
+        }
+    }
+
+    @Test
+    @Order(12)
     fun secondCountTest() {
         When {
             get("/count")
@@ -400,7 +369,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     fun getByIdValidTest() {
         When {
             get("/{id}", bank.id)
@@ -414,7 +383,7 @@ class BankControllerTest {
      * Update
      */
     @Test
-    @Order(13)
+    @Order(14)
     fun updateInvalidIdTest() {
         Given {
             contentType(ContentType.JSON)
@@ -432,7 +401,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(14)
+    @Order(15)
     fun updateEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -444,7 +413,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(15)
+    @Order(16)
     fun updateEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -466,7 +435,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(16)
+    @Order(17)
     fun updateNullValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -496,7 +465,7 @@ class BankControllerTest {
     // TODO: Pode melhorar!
     @NullAndEmptySource
     @ValueSource(strings = [" ", "ABC", "12A", "@#$", "1234", "12"])
-    @Order(17)
+    @Order(18)
     fun updateInvalidCodeTest(invalidCode: String?) {
         Given {
             contentType(ContentType.JSON)
@@ -513,7 +482,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(18)
+    @Order(19)
     fun updateInvalidNameTest() {
         Given {
             contentType(ContentType.JSON)
@@ -538,7 +507,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(19)
+    @Order(20)
     fun updateSuccessTest() {
         val code = "7".repeat(3)
         val name = "B".repeat(150)
@@ -571,7 +540,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(20)
+    @Order(21)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -583,7 +552,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(21)
+    @Order(22)
     fun checkUpdateTest() {
         When {
             get("/{id}", bank.id)
@@ -599,7 +568,7 @@ class BankControllerTest {
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
-    @Order(22)
+    @Order(23)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -609,7 +578,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(23)
+    @Order(24)
     fun deleteValidTest() {
         When {
             delete("/{id}", bank.id)
@@ -620,7 +589,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(24)
+    @Order(25)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -632,7 +601,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(25)
+    @Order(26)
     fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", bank.id)
@@ -642,7 +611,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(27)
     fun finalListTest() {
         When {
             get()

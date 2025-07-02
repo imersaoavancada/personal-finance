@@ -1,4 +1,4 @@
-package br.com.imversaoavancada.repositories
+package br.com.imversaoavancada.infra.repositories
 
 import br.com.imversaoavancada.entities.Bank
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepositoryBase

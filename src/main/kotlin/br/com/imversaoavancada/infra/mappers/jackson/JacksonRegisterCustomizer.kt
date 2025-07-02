@@ -1,4 +1,4 @@
-package br.com.imversaoavancada.utils
+package br.com.imversaoavancada.infra.mappers.jackson
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule

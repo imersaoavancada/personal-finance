@@ -1,7 +1,7 @@
 package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.Bank
-import br.com.imversaoavancada.repositories.BankRepository
+import br.com.imversaoavancada.infra.repositories.BankRepository
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional

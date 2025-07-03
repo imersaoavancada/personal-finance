@@ -371,6 +371,10 @@ class BankControllerTest {
     @Test
     @Order(13)
     fun getByIdValidTest() {
+        println("========================")
+        println(bank.toMap())
+        println("========================")
+
         When {
             get("/{id}", bank.id)
         } Then {
@@ -554,6 +558,10 @@ class BankControllerTest {
     @Test
     @Order(22)
     fun checkUpdateTest() {
+        println("========================")
+        println(bank.toMap())
+        println("========================")
+
         When {
             get("/{id}", bank.id)
         } Then {

@@ -13,7 +13,7 @@ import org.hibernate.annotations.SQLRestriction
 @Entity
 @Table(name = "banks")
 @SQLDelete(sql = "UPDATE banks SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at = '1970-01-01 00:00:00+00:00'")
+@SQLRestriction("deleted_at IS NULL")
 class Bank : AbstractFullEntity() {
     @NotBlank(message = "not_blank")
     @Size(min = 3, max = 3, message = "size_equal:{min}")

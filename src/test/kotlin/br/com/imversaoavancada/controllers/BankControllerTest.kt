@@ -91,6 +91,7 @@ class BankControllerTest {
     companion object {
         var count = 2
         var invalidId = -1
+        val body = mutableMapOf<String, Any?>()
         lateinit var bank: Bank
 
         @BeforeAll
@@ -171,14 +172,15 @@ class BankControllerTest {
     @Test
     @Order(6)
     fun insertNullValuesTest() {
+        body.apply {
+            clear()
+            put("code", null)
+            put("name", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to null,
-                    "name" to null,
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
@@ -198,14 +200,15 @@ class BankControllerTest {
     @Test
     @Order(7)
     fun insertEmptyValuesTest() {
+        body.apply {
+            clear()
+            put("code", "")
+            put("name", "")
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to "",
-                    "name" to "",
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
@@ -231,14 +234,15 @@ class BankControllerTest {
     @Test
     @Order(8)
     fun insertBlankValuesTest() {
+        body.apply {
+            clear()
+            put("code", " ")
+            put("name", " ")
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to " ",
-                    "name" to " ",
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
@@ -263,14 +267,15 @@ class BankControllerTest {
     @Test
     @Order(9)
     fun insertWrongValuesTest() {
+        body.apply {
+            clear()
+            put("code", "A".repeat(4))
+            put("name", "A".repeat(151))
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to "A".repeat(4),
-                    "name" to "A".repeat(151),
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
@@ -294,30 +299,25 @@ class BankControllerTest {
     @Test
     @Order(10)
     fun insertSuccessTest() {
-        val code = "8".repeat(3)
-        val name = "A".repeat(150)
+        body.apply {
+            clear()
+            put("code", "8".repeat(3))
+            put("name", "A".repeat(150))
+        }
 
         bank = Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to code,
-                    "name" to name,
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
             statusCode(201)
             contentType(ContentType.JSON)
-            body(
-                "id",
-                notNullValue(),
-                "code",
-                equalTo(code),
-                "name",
-                equalTo(name),
-            )
+
+            body("id", notNullValue())
+            body.forEach { (key, value) ->
+                body(key, equalTo(value))
+            }
         } Extract {
             body().parse(Bank::class)
         }
@@ -329,17 +329,9 @@ class BankControllerTest {
     @Test
     @Order(11)
     fun insertDuplicatedTest() {
-        val code = "8".repeat(3)
-        val name = "A".repeat(150)
-
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to code,
-                    "name" to name,
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
@@ -387,12 +379,7 @@ class BankControllerTest {
     fun updateInvalidIdTest() {
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to "123",
-                    "name" to "Banco Teste",
-                ),
-            )
+            body(body)
         } When {
             put("/{id}", invalidId)
         } Then {
@@ -567,7 +554,7 @@ class BankControllerTest {
      * Delete
      */
     @ParameterizedTest
-    @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
+    @ValueSource(strings = ["-1", "0", "999", "123456789ABCaç@!@#", "AAA"])
     @Order(23)
     fun deleteInvalidTest(invalidId: String) {
         When {

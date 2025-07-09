@@ -1,17 +1,17 @@
 meta {
-  name: Delete Bank
+  name: Delete History
   type: http
   seq: 6
 }
 
 delete {
-  url: {{BASE_URL}}/banks/:id
+  url: {{BASE_URL}}/histories/:id
   body: none
   auth: inherit
 }
 
 params:path {
-  id: {{bank_id}}
+  id: {{history_id}}
 }
 
 assert {

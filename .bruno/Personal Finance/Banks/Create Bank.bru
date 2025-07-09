@@ -18,5 +18,5 @@ body:json {
 }
 
 script:post-response {
-  bru.setVar('bank_id', res.getBody().id)
+  bru.setVar('bank_id', res.body.id)
 }

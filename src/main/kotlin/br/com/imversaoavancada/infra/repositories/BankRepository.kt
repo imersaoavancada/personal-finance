@@ -8,4 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped
  * @author Eduardo Folly
  */
 @ApplicationScoped
-class BankRepository : PanacheRepositoryBase<Bank, Long>
+class BankRepository : PanacheRepositoryBase<Bank, Long> {
+    fun findByCode(code: String): Bank? = find("code", code).firstResult()
+}

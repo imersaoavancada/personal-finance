@@ -47,6 +47,7 @@ class Account : AbstractFullEntity() {
             mapOf(
                 "name" to name,
                 "type" to type?.name,
+                "bank" to bank?.toMap(),
                 "branch" to branch,
                 "number" to number,
                 "creditLimit" to creditLimit,

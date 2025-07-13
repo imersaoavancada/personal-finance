@@ -1,13 +1,12 @@
 package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.Account
+import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.AccountRepository
 import br.com.imversaoavancada.infra.repositories.BankRepository
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
-import jakarta.ws.rs.BadRequestException
-import jakarta.ws.rs.NotFoundException
 
 /**
  * @author Eduardo Folly
@@ -31,22 +30,19 @@ class AccountService(
         }
 
         return repository
-            .find(
-                "LOWER(name) LIKE ?1",
-                "%${term.lowercase()}%",
-            )
+            .find("LOWER(name) LIKE ?1", "%${term.lowercase()}%")
     }
 
     fun getById(id: Long): Account =
         repository.findById(id)
-            ?: throw NotFoundException() // TODO: Create a error object.
+            ?: throw IdNotFoundException(id, "account")
 
     @Transactional
     fun create(account: Account): Account {
         account.bank =
             account.bank?.let { bank ->
                 bank.id?.let { bankRepository.findById(it) }
-                    ?: throw BadRequestException()
+                    ?: throw IdNotFoundException(bank.id, "bank")
             }
 
         repository.persist(account)
@@ -63,7 +59,7 @@ class AccountService(
         persisted.bank =
             account.bank?.let { bank ->
                 bank.id?.let { bankRepository.findById(it) }
-                    ?: throw BadRequestException()
+                    ?: throw IdNotFoundException(bank.id, "bank")
             }
 
         persisted.name = account.name

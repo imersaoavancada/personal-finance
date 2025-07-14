@@ -1,6 +1,9 @@
 package br.com.imversaoavancada
 
 import io.restassured.response.ResponseBodyExtractionOptions
+import io.restassured.response.ValidatableResponse
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasItems
 import kotlin.reflect.KClass
 
 /**
@@ -52,3 +55,16 @@ sealed class Error(
 
 fun <T : Any> ResponseBodyExtractionOptions.parse(clazz: KClass<T>): T =
     this.`as`(clazz.java)
+
+fun ValidatableResponse.checkError(
+    status: Int,
+    vararg errors: Map<String, Any?>,
+): ValidatableResponse =
+    body(
+        "status",
+        equalTo(status),
+        "violations.size()",
+        equalTo(errors.size),
+        "violations",
+        hasItems(*errors),
+    )

@@ -1,6 +1,7 @@
 package br.com.imversaoavancada.controllers
 
 import br.com.imversaoavancada.Error
+import br.com.imversaoavancada.checkError
 import br.com.imversaoavancada.entities.Account
 import br.com.imversaoavancada.parse
 import io.quarkus.test.common.http.TestHTTPEndpoint
@@ -90,16 +91,10 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(
-                    Error.Create("name").notBlank(),
-                    Error.Create("type").notNull(),
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("type").notNull(),
             )
         }
     }
@@ -125,16 +120,10 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(
-                    Error.Create("name").notBlank(),
-                    Error.Create("type").notNull(),
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("type").notNull(),
             )
         }
     }
@@ -160,16 +149,13 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(5),
-                "violations",
-                hasItems(
-                    Error.Create("name").notBlank(),
-                    Error.Create("type").notNull(),
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("name").size(1, 255),
+                Error.Create("type").notNull(),
+                Error.Create("branch").size(1, 255),
+                Error.Create("number").size(1, 255),
             )
         }
     }
@@ -195,16 +181,10 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(
-                    Error.Create("name").notBlank(),
-                    Error.Create("type").notNull(),
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("type").notNull(),
             )
         }
     }
@@ -230,19 +210,13 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(5),
-                "violations",
-                hasItems(
-                    Error.Create("name").size(1, 255),
-                    Error.Create("type").notNull(),
-                    Error.Create("branch").size(1, 255),
-                    Error.Create("number").size(1, 255),
-                    Error.Create("creditLimit").positiveOrZero(),
-                ),
+            checkError(
+                400,
+                Error.Create("name").size(1, 255),
+                Error.Create("type").notNull(),
+                Error.Create("branch").size(1, 255),
+                Error.Create("number").size(1, 255),
+                Error.Create("creditLimit").positiveOrZero(),
             )
         }
     }
@@ -268,14 +242,7 @@ class AccountControllerTest {
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(404),
-                "violations.size()",
-                equalTo(1),
-                "violations",
-                hasItem(Error.Create("bank").idNotNull()),
-            )
+            checkError(404, Error.Create("bank").idNotNull())
         }
     }
 
@@ -300,14 +267,7 @@ class AccountControllerTest {
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(404),
-                "violations.size()",
-                equalTo(1),
-                "violations",
-                hasItem(Error.Create("bank").idNotNull()),
-            )
+            checkError(404, Error.Create("bank").idNotNull())
         }
     }
 
@@ -332,14 +292,7 @@ class AccountControllerTest {
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(404),
-                "violations.size()",
-                equalTo(1),
-                "violations",
-                hasItem(Error.Create("bank").idNotNull(invalidId)),
-            )
+            checkError(404, Error.Create("bank").idNotNull(invalidId))
         }
     }
 
@@ -439,16 +392,10 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(
-                    Error.Update("name").notBlank(),
-                    Error.Update("type").notNull(),
-                ),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("type").notNull(),
             )
         }
     }
@@ -474,16 +421,10 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(
-                    Error.Update("name").notBlank(),
-                    Error.Update("type").notNull(),
-                ),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("type").notNull(),
             )
         }
     }
@@ -509,19 +450,13 @@ class AccountControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(5),
-                "violations",
-                hasItems(
-                    Error.Update("name").size(1, 255),
-                    Error.Update("type").notNull(),
-                    Error.Update("branch").size(1, 255),
-                    Error.Update("number").size(1, 255),
-                    Error.Update("creditLimit").positiveOrZero(),
-                ),
+            checkError(
+                400,
+                Error.Update("name").size(1, 255),
+                Error.Update("type").notNull(),
+                Error.Update("branch").size(1, 255),
+                Error.Update("number").size(1, 255),
+                Error.Update("creditLimit").positiveOrZero(),
             )
         }
     }
@@ -548,6 +483,7 @@ class AccountControllerTest {
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
+
                 body("id", equalTo(account.id?.toInt()))
                 body.remove("bank") // FIXME
                 body.forEach { (key, value) ->

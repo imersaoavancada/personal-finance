@@ -12,7 +12,8 @@ import io.restassured.module.kotlin.extensions.*
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.NullAndEmptySource
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 
 /**
@@ -32,6 +33,37 @@ class BankControllerTest {
         @JvmStatic
         fun initAll() {
             RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
+        }
+
+        @JvmStatic
+        fun updateInvalidCodes(): List<Arguments> {
+            val notBlank = Error.Update("code").notBlank()
+            val sizeEqual = Error.Update("code").sizeEquals(3)
+            val onlyNumbers = Error.Update("code").onlyNumbers()
+            val nameSizeBetween = Error.Update("name").sizeBetween(1, 150)
+
+            return listOf(
+                Arguments.of(null, arrayOf(notBlank, nameSizeBetween)),
+                Arguments.of(
+                    "",
+                    arrayOf(notBlank, sizeEqual, onlyNumbers, nameSizeBetween),
+                ),
+                Arguments.of(
+                    " ",
+                    arrayOf(notBlank, sizeEqual, onlyNumbers, nameSizeBetween),
+                ),
+                Arguments.of("ABC", arrayOf(onlyNumbers, nameSizeBetween)),
+                Arguments.of("12A", arrayOf(onlyNumbers, nameSizeBetween)),
+                Arguments.of("@#$", arrayOf(onlyNumbers, nameSizeBetween)),
+                Arguments.of(
+                    "1234",
+                    arrayOf(sizeEqual, onlyNumbers, nameSizeBetween),
+                ),
+                Arguments.of(
+                    "12",
+                    arrayOf(sizeEqual, onlyNumbers, nameSizeBetween),
+                ),
+            )
         }
     }
 
@@ -187,7 +219,7 @@ class BankControllerTest {
 
     @Test
     @Order(9)
-    fun insertWrongValuesTest() {
+    fun insertInvalidValuesTest() {
         body.apply {
             clear()
             put("code", "A".repeat(4))
@@ -292,6 +324,11 @@ class BankControllerTest {
             put("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Bank::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -329,14 +366,15 @@ class BankControllerTest {
     @Test
     @Order(17)
     fun updateNullValuesTest() {
+        body.apply {
+            clear()
+            put("code", null)
+            put("name", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to null,
-                    "name" to null,
-                ),
-            )
+            body(body)
         } When {
             put("/{id}", bank.id)
         } Then {
@@ -351,76 +389,46 @@ class BankControllerTest {
     }
 
     @ParameterizedTest
-    // TODO: Pode melhorar!
-    @NullAndEmptySource
-    @ValueSource(strings = [" ", "ABC", "12A", "@#$", "1234", "12"])
+    @MethodSource("updateInvalidCodes")
     @Order(18)
-    fun updateInvalidCodeTest(invalidCode: String?) {
+    fun updateInvalidCodeTest(
+        invalidCode: String?,
+        errors: Array<Map<String, Any?>>,
+    ) {
         Given {
             contentType(ContentType.JSON)
-            body(mapOf("code" to invalidCode, "name" to "Banco Atualizado"))
-        } When {
-            put("/{id}", bank.id)
-        } Then {
-            statusCode(400)
-            body(
-                "violations.field",
-                hasItem(containsString("update.body.code")),
-            )
-        }
-    }
-
-    @Test
-    @Order(19)
-    fun updateInvalidNameTest() {
-        Given {
-            contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to "123",
-                    "name" to "A".repeat(151),
-                ),
-            )
+            body(mapOf("code" to invalidCode, "name" to "A".repeat(151)))
         } When {
             put("/{id}", bank.id)
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            checkError(
-                400,
-                Error.Update("name").sizeBetween(1, 150),
-            )
+            checkError(400, *errors)
         }
     }
 
     @Test
     @Order(20)
     fun updateSuccessTest() {
-        val code = "7".repeat(3)
-        val name = "B".repeat(150)
+        body.apply {
+            clear()
+            put("code", "7".repeat(3))
+            put("name", "B".repeat(150))
+        }
 
         bank =
             Given {
                 contentType(ContentType.JSON)
-                body(
-                    mapOf<String, Any?>(
-                        "code" to code,
-                        "name" to name,
-                    ),
-                )
+                body(body)
             } When {
                 put("/{id}", bank.id)
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
-                body(
-                    "id",
-                    equalTo(bank.id?.toInt()),
-                    "code",
-                    equalTo(code),
-                    "name",
-                    equalTo(name),
-                )
+                body("id", equalTo(bank.id?.toInt()))
+                body.forEach { (key, value) ->
+                    body(key, equalTo(value))
+                }
             } Extract {
                 body().parse(Bank::class)
             }
@@ -499,6 +507,11 @@ class BankControllerTest {
             delete("/{id}", bank.id)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Bank::class).idNotFound(bank.id),
+            )
         }
     }
 

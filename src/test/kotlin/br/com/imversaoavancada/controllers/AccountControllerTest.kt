@@ -197,7 +197,7 @@ class AccountControllerTest {
 
     @Test
     @Order(9)
-    fun insertWrongValuesTest() {
+    fun insertInvalidValuesTest() {
         body.apply {
             clear()
             put("name", "A".repeat(256))

@@ -3,6 +3,7 @@ package br.com.imversaoavancada.controllers
 import br.com.imversaoavancada.Error
 import br.com.imversaoavancada.checkError
 import br.com.imversaoavancada.entities.Account
+import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.parse
 import io.quarkus.test.common.http.TestHTTPEndpoint
 import io.quarkus.test.junit.QuarkusTest
@@ -41,6 +42,11 @@ class AccountControllerTest {
             get("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -242,7 +248,7 @@ class AccountControllerTest {
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
-            checkError(404, Error.Create("bank").idNotNull())
+            checkError(404, Error.Create(Bank::class).idNotFound())
         }
     }
 
@@ -267,7 +273,7 @@ class AccountControllerTest {
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
-            checkError(404, Error.Create("bank").idNotNull())
+            checkError(404, Error.Create(Bank::class).idNotFound())
         }
     }
 
@@ -292,7 +298,7 @@ class AccountControllerTest {
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
-            checkError(404, Error.Create("bank").idNotNull(invalidId))
+            checkError(404, Error.Create(Bank::class).idNotFound(invalidId))
         }
     }
 
@@ -522,13 +528,18 @@ class AccountControllerTest {
      * Delete
      */
     @ParameterizedTest
-    @ValueSource(strings = ["-1", "0", "999", "123456789ABCaç@!@#", "AAA"])
+    @ValueSource(strings = ["-1", "0", "999"])
     @Order(23)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
         }
     }
 

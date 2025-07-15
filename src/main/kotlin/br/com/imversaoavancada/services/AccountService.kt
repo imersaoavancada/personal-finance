@@ -35,14 +35,14 @@ class AccountService(
 
     fun getById(id: Long): Account =
         repository.findById(id)
-            ?: throw IdNotFoundException(id, "account")
+            ?: throw IdNotFoundException(id, Account::class)
 
     @Transactional
     fun create(account: Account): Account {
         account.bank =
             account.bank?.let { bank ->
                 bank.id?.let { bankRepository.findById(it) }
-                    ?: throw IdNotFoundException(bank.id, "bank")
+                    ?: throw IdNotFoundException(bank.id, bank::class)
             }
 
         repository.persist(account)
@@ -59,7 +59,7 @@ class AccountService(
         persisted.bank =
             account.bank?.let { bank ->
                 bank.id?.let { bankRepository.findById(it) }
-                    ?: throw IdNotFoundException(bank.id, "bank")
+                    ?: throw IdNotFoundException(bank.id, bank::class)
             }
 
         persisted.name = account.name

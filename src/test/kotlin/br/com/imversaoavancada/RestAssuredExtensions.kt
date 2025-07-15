@@ -16,11 +16,15 @@ sealed class Error(
 ) {
     class Create(
         field: String,
-    ) : Error("create", field)
+    ) : Error("create", field) {
+        constructor(clazz: KClass<*>) : this(clazz.simpleName!!)
+    }
 
     class Update(
         field: String,
-    ) : Error("update", field)
+    ) : Error("update", field) {
+        constructor(clazz: KClass<*>) : this(clazz.simpleName!!)
+    }
 
     fun notBlank(): Map<String, Any?> =
         mapOf(
@@ -46,7 +50,7 @@ sealed class Error(
             "message" to "positive_or_zero",
         )
 
-    fun idNotNull(id: Long? = null): Map<String, Any?> =
+    fun idNotFound(id: Any? = null): Map<String, Any?> =
         mapOf(
             "field" to field,
             "message" to "id_not_found:$id",

@@ -2,10 +2,14 @@ package br.com.imversaoavancada.infra.exceptions
 
 import jakarta.ws.rs.WebApplicationException
 import jakarta.ws.rs.core.Response
+import kotlin.reflect.KClass
 
+/**
+ * @author Eduardo Folly
+ */
 class IdNotFoundException(
     id: Long?,
-    field: String,
+    clazz: KClass<*>,
 ) : WebApplicationException(
         Response
             .status(404)
@@ -16,7 +20,7 @@ class IdNotFoundException(
                     "violations" to
                         listOf(
                             mapOf(
-                                "field" to field,
+                                "field" to clazz.simpleName,
                                 "message" to "id_not_found:$id",
                             ),
                         ),

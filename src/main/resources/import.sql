@@ -7,5 +7,5 @@ INSERT INTO accounts (name, account_type, bank_id, branch, account_number, credi
   ('Conta Poupança Exemplo', 'SAVINGS' , 1, '0001', '0002', 0);
 
 INSERT INTO tags (name, color) VALUES
-('Tag existe 1', 1234),
-('Tag existe 2', 3216);
+  ('Tag existe 1', 1234),
+  ('Tag existe 2', 3216);

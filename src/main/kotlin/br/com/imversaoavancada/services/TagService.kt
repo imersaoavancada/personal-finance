@@ -7,6 +7,9 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
 
+/**
+ * @author Douglas O. Luciano
+ */
 @ApplicationScoped
 class TagService(
     val repository: TagRepository,

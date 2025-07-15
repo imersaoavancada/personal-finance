@@ -3,17 +3,13 @@ package br.com.imversaoavancada.entities
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotNull
-import jakarta.validation.constraints.PositiveOrZero
-import jakarta.validation.constraints.Size
+import jakarta.validation.constraints.*
 import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.SQLRestriction
 
 /**
  * @author Douglas O. Luciano
  */
-
 @Entity
 @Table(name = "tags")
 @SQLDelete(sql = "UPDATE tags SET deleted_at = NOW() WHERE id = ?")
@@ -28,9 +24,12 @@ class Tag : AbstractFullEntity() {
     @Column(length = 255, nullable = false, unique = true)
     var name: String? = null
 
-    @NotNull(message = "not_blank")
+    @NotNull(message = "not_null")
     @PositiveOrZero(message = "positive_or_zero")
-    var color: Int? = null
+    @Min(0, message = "min_value:{value}")
+    @Max(0xFFFFFFFF, message = "max_value:{value}")
+    @Column(name = "color", nullable = false)
+    var color: Long? = null
 
     override fun toMap(): Map<String, Any?> =
         super.toMap() +

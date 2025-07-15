@@ -10,11 +10,9 @@ import io.restassured.module.kotlin.extensions.*
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.NullAndEmptySource
 import org.junit.jupiter.params.provider.ValueSource
 
-@Suppress("ktlint:standard:no-consecutive-comments")
-/*
+/**
  * @author Douglas O. Luciano
  */
 @QuarkusTest
@@ -28,10 +26,10 @@ class TagControllerTest {
             "message" to "not_blank",
         )
 
-    val colorNotBlankError =
+    val colorNotNullError =
         mapOf(
             "field" to "create.body.color",
-            "message" to "not_blank",
+            "message" to "not_null",
         )
 
     val nameSizeBetweenError =
@@ -53,16 +51,28 @@ class TagControllerTest {
             "message" to "not_blank",
         )
 
-    val updateColorNotBlankError =
+    val updateColorNotNullError =
         mapOf(
             "field" to "update.body.color",
-            "message" to "not_blank",
+            "message" to "not_null",
         )
 
     val updateNameSizeBetweenError =
         mapOf(
             "field" to "update.body.name",
             "message" to "size_between:1:255",
+        )
+
+    val negativeColorNumberError =
+        mapOf(
+            "field" to "create.body.color",
+            "message" to "positive_or_zero",
+        )
+
+    val minimumColorValueError =
+        mapOf(
+            "field" to "create.body.color",
+            "message" to "min_value:0",
         )
 
     companion object {
@@ -140,7 +150,7 @@ class TagControllerTest {
                 "violations.size()",
                 equalTo(2),
                 "violations",
-                hasItems(nameNotBlankError, colorNotBlankError),
+                hasItems(nameNotBlankError, colorNotNullError),
             )
         }
     }
@@ -152,8 +162,8 @@ class TagControllerTest {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "code" to null,
                     "name" to null,
+                    "color" to null,
                 ),
             )
         } When {
@@ -167,7 +177,7 @@ class TagControllerTest {
                 "violations.size()",
                 equalTo(2),
                 "violations",
-                hasItems(nameNotBlankError, colorNotBlankError),
+                hasItems(nameNotBlankError, colorNotNullError),
             )
         }
     }
@@ -180,7 +190,7 @@ class TagControllerTest {
             body(
                 mapOf<String, Any?>(
                     "name" to "",
-                    "code" to "",
+                    "color" to "",
                 ),
             )
         } When {
@@ -196,7 +206,7 @@ class TagControllerTest {
                 "violations",
                 hasItems(
                     nameNotBlankError,
-                    colorNotBlankError,
+                    colorNotNullError,
                     nameSizeBetweenError,
                 ),
             )
@@ -226,23 +236,53 @@ class TagControllerTest {
                 equalTo(2),
                 "violations",
                 hasItems(
-                    colorNotBlankError,
+                    colorNotNullError,
                     nameNotBlankError,
                 ),
             )
         }
     }
-    // TODO: How can I get a wrong value on integer field color?
-    /*
+
     @Test
     @Order(9)
-    fun insertWrongValuesTest() {
+    fun insertWrongValuesNegativeColorTest() {
         Given {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to "A".repeat(4),
-                    "name" to "A".repeat(300),
+                    "color" to -1,
+                    "name" to "A".repeat(256),
+                ),
+            )
+        } When {
+            post()
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(3),
+                "violations",
+                hasItems(
+                    nameSizeBetweenError,
+                    negativeColorNumberError,
+                    minimumColorValueError,
+                ),
+            )
+        }
+    }
+
+    @Test
+    @Order(10)
+    fun insertWrongValuesNumberBiggerThanLimitTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "color" to 0x100000000L,
+                    "name" to "A".repeat(256),
                 ),
             )
         } When {
@@ -257,26 +297,24 @@ class TagControllerTest {
                 equalTo(2),
                 "violations",
                 hasItems(
-                    insertWrongColorTypeTest,
                     nameSizeBetweenError,
                 ),
             )
         }
     }
-     */
 
     @Test
-    @Order(10)
+    @Order(11)
     fun insertSuccessTest() {
-        val color = "8".repeat(5).toInt()
-        val name = "A".repeat(150)
+        val color = 0xFFFF00FFL
+        val name = "A".repeat(255)
 
         tag = Given {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to color,
                     "name" to name,
+                    "color" to color,
                 ),
             )
         } When {
@@ -300,17 +338,17 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     fun insertDuplicatedTest() {
-        val color = "8".repeat(3).toInt()
-        val name = "A".repeat(150)
+        val color = 0xFFFF00FFL
+        val name = "A".repeat(255)
 
         Given {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to color,
                     "name" to name,
+                    "color" to color,
                 ),
             )
         } When {
@@ -330,7 +368,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     fun secondCountTest() {
         When {
             get("/count")
@@ -342,7 +380,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     fun getByIdValidTest() {
         When {
             get("/{id}", tag.id)
@@ -356,13 +394,13 @@ class TagControllerTest {
      * Update
      */
     @Test
-    @Order(14)
+    @Order(15)
     fun updateInvalidIdTest() {
         Given {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to "123",
+                    "color" to 0xFFFF00FFL,
                     "name" to "Tag Teste",
                 ),
             )
@@ -374,7 +412,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(15)
+    @Order(16)
     fun updateEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -386,7 +424,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(16)
+    @Order(17)
     fun updateEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -402,13 +440,13 @@ class TagControllerTest {
                 "violations.size()",
                 equalTo(2),
                 "violations",
-                hasItems(updateNameNotBlankError, updateColorNotBlankError),
+                hasItems(updateNameNotBlankError, updateColorNotNullError),
             )
         }
     }
 
     @Test
-    @Order(17)
+    @Order(18)
     fun updateNullValuesTest() {
         Given {
             contentType(ContentType.JSON)
@@ -429,27 +467,7 @@ class TagControllerTest {
                 "violations.size()",
                 equalTo(2),
                 "violations",
-                hasItems(updateNameNotBlankError, updateColorNotBlankError),
-            )
-        }
-    }
-
-    @ParameterizedTest
-    // TODO: Como capturar ABC, 12A e @#$ no ValueSource?
-    @NullAndEmptySource
-    @ValueSource(strings = [" ", "-1"])
-    @Order(18)
-    fun updateInvalidColorTest(invalidColor: String?) {
-        Given {
-            contentType(ContentType.JSON)
-            body(mapOf("color" to invalidColor, "name" to "Tag Atualizada"))
-        } When {
-            put("/{id}", tag.id)
-        } Then {
-            statusCode(400)
-            body(
-                "violations.field",
-                hasItem(containsString("update.body.color")),
+                hasItems(updateNameNotBlankError, updateColorNotNullError),
             )
         }
     }
@@ -461,7 +479,7 @@ class TagControllerTest {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to 123,
+                    "color" to -1,
                     "name" to "A".repeat(256),
                 ),
             )
@@ -482,7 +500,7 @@ class TagControllerTest {
     @Test
     @Order(20)
     fun updateSuccessTest() {
-        val color = "7".repeat(3).toInt()
+        val color = 0xFFFF00FFL
         val name = "B".repeat(150)
 
         tag =

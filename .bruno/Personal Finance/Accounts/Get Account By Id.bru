@@ -1,0 +1,15 @@
+meta {
+  name: Get Account By Id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{BASE_URL}}/accounts/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: {{account_id}}
+}

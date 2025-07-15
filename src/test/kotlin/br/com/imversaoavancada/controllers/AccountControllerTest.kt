@@ -1,5 +1,8 @@
 package br.com.imversaoavancada.controllers
 
+import br.com.imversaoavancada.Error
+import br.com.imversaoavancada.checkError
+import br.com.imversaoavancada.entities.Account
 import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.parse
 import io.quarkus.test.common.http.TestHTTPEndpoint
@@ -10,89 +13,20 @@ import io.restassured.module.kotlin.extensions.*
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.NullAndEmptySource
 import org.junit.jupiter.params.provider.ValueSource
 
 /**
  * @author Eduardo Folly
  */
 @QuarkusTest
-@TestHTTPEndpoint(BankController::class)
+@TestHTTPEndpoint(AccountController::class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-class BankControllerTest {
-    // Create Maps
-    val nameNotBlankError =
-        mapOf(
-            "field" to "create.body.name",
-            "message" to "not_blank",
-        )
-
-    val codeNotBlankError =
-        mapOf(
-            "field" to "create.body.code",
-            "message" to "not_blank",
-        )
-
-    val codeOnlyNumbersError =
-        mapOf(
-            "field" to "create.body.code",
-            "message" to "only_numbers",
-        )
-
-    val codeSizeEqualError =
-        mapOf(
-            "field" to "create.body.code",
-            "message" to "size_equal:3",
-        )
-
-    val nameSizeBetweenError =
-        mapOf(
-            "field" to "create.body.name",
-            "message" to "size_between:1:150",
-        )
-
-    val uniqueCodeError =
-        mapOf(
-            "field" to "banks_code_key",
-            "message" to "constraint_violation_exception",
-        )
-
-    // Update Maps
-    val updateNameNotBlankError =
-        mapOf(
-            "field" to "update.body.name",
-            "message" to "not_blank",
-        )
-
-    val updateCodeNotBlankError =
-        mapOf(
-            "field" to "update.body.code",
-            "message" to "not_blank",
-        )
-
-//    val updateCodeOnlyNumbersError =
-//        mapOf(
-//            "field" to "update.body.code",
-//            "message" to "only_numbers",
-//        )
-
-//    val updateCodeSizeEqualError =
-//        mapOf(
-//            "field" to "update.body.code",
-//            "message" to "size_equal:3",
-//        )
-
-    val updateNameSizeBetweenError =
-        mapOf(
-            "field" to "update.body.name",
-            "message" to "size_between:1:150",
-        )
-
+class AccountControllerTest {
     companion object {
         var count = 2
-        var invalidId = -1
+        var invalidId = -1L
         val body = mutableMapOf<String, Any?>()
-        lateinit var bank: Bank
+        lateinit var account: Account
 
         @BeforeAll
         @JvmStatic
@@ -108,6 +42,11 @@ class BankControllerTest {
             get("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -158,13 +97,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(nameNotBlankError, codeNotBlankError),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("type").notNull(),
             )
         }
     }
@@ -174,8 +110,12 @@ class BankControllerTest {
     fun insertNullValuesTest() {
         body.apply {
             clear()
-            put("code", null)
             put("name", null)
+            put("type", null)
+            put("bank", null)
+            put("branch", null)
+            put("number", null)
+            put("creditLimit", null)
         }
 
         Given {
@@ -186,13 +126,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(nameNotBlankError, codeNotBlankError),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("type").notNull(),
             )
         }
     }
@@ -202,8 +139,12 @@ class BankControllerTest {
     fun insertEmptyValuesTest() {
         body.apply {
             clear()
-            put("code", "")
             put("name", "")
+            put("type", null)
+            put("bank", null)
+            put("branch", "")
+            put("number", "")
+            put("creditLimit", null)
         }
 
         Given {
@@ -214,19 +155,13 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(5),
-                "violations",
-                hasItems(
-                    nameNotBlankError,
-                    codeNotBlankError,
-                    codeOnlyNumbersError,
-                    codeSizeEqualError,
-                    nameSizeBetweenError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("name").size(1, 255),
+                Error.Create("type").notNull(),
+                Error.Create("branch").size(1, 255),
+                Error.Create("number").size(1, 255),
             )
         }
     }
@@ -236,8 +171,12 @@ class BankControllerTest {
     fun insertBlankValuesTest() {
         body.apply {
             clear()
-            put("code", " ")
             put("name", " ")
+            put("type", null)
+            put("bank", null)
+            put("branch", " ")
+            put("number", " ")
+            put("creditLimit", null)
         }
 
         Given {
@@ -248,18 +187,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(4),
-                "violations",
-                hasItems(
-                    codeNotBlankError,
-                    codeSizeEqualError,
-                    codeOnlyNumbersError,
-                    nameNotBlankError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("type").notNull(),
             )
         }
     }
@@ -269,8 +200,12 @@ class BankControllerTest {
     fun insertWrongValuesTest() {
         body.apply {
             clear()
-            put("code", "A".repeat(4))
-            put("name", "A".repeat(151))
+            put("name", "A".repeat(256))
+            put("type", null)
+            put("bank", null)
+            put("branch", "A".repeat(256))
+            put("number", "A".repeat(256))
+            put("creditLimit", -1)
         }
 
         Given {
@@ -281,31 +216,106 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    codeSizeEqualError,
-                    codeOnlyNumbersError,
-                    nameSizeBetweenError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").size(1, 255),
+                Error.Create("type").notNull(),
+                Error.Create("branch").size(1, 255),
+                Error.Create("number").size(1, 255),
+                Error.Create("creditLimit").positiveOrZero(),
             )
         }
     }
 
     @Test
     @Order(10)
+    fun insertEmptyBankTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("type", "CHECKING")
+            put("bank", mapOf<String, Any?>())
+            put("branch", "A".repeat(255))
+            put("number", "A".repeat(255))
+            put("creditLimit", 0)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(404, Error.Create(Bank::class).idNotFound())
+        }
+    }
+
+    @Test
+    @Order(10)
+    fun insertNullBankTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("type", "CHECKING")
+            put("bank", mapOf<String, Any?>("id" to null))
+            put("branch", "A".repeat(255))
+            put("number", "A".repeat(255))
+            put("creditLimit", 0)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(404, Error.Create(Bank::class).idNotFound())
+        }
+    }
+
+    @Test
+    @Order(10)
+    fun insertInvalidBankTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("type", "CHECKING")
+            put("bank", mapOf<String, Any?>("id" to invalidId))
+            put("branch", "A".repeat(255))
+            put("number", "A".repeat(255))
+            put("creditLimit", 0)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(404, Error.Create(Bank::class).idNotFound(invalidId))
+        }
+    }
+
+    @Test
+    @Order(11)
     fun insertSuccessTest() {
         body.apply {
             clear()
-            put("code", "8".repeat(3))
-            put("name", "A".repeat(150))
+            put("name", "A".repeat(255))
+            put("type", "CHECKING")
+            put("bank", mapOf("id" to 1))
+            put("branch", "A".repeat(255))
+            put("number", "A".repeat(255))
+            put("creditLimit", 0)
         }
 
-        bank = Given {
+        account = Given {
             contentType(ContentType.JSON)
             body(body)
         } When {
@@ -315,37 +325,15 @@ class BankControllerTest {
             contentType(ContentType.JSON)
 
             body("id", notNullValue())
+            body.remove("bank") // FIXME
             body.forEach { (key, value) ->
                 body(key, equalTo(value))
             }
         } Extract {
-            body().parse(Bank::class)
+            body().parse(Account::class)
         }
 
         count++
-    }
-
-    // https://github.com/imersaoavancada/personal-finance/issues/8
-    @Test
-    @Order(11)
-    fun insertDuplicatedTest() {
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            post()
-        } Then {
-            statusCode(400)
-            contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(1),
-                "violations",
-                hasItem(uniqueCodeError),
-            )
-        }
     }
 
     @Test
@@ -364,10 +352,10 @@ class BankControllerTest {
     @Order(13)
     fun getByIdValidTest() {
         When {
-            get("/{id}", bank.id)
+            get("/{id}", account.id)
         } Then {
             statusCode(200)
-            body("$", equalTo(bank.toMap()))
+            body("$", equalTo(account.toMap()))
         }
     }
 
@@ -393,7 +381,7 @@ class BankControllerTest {
         Given {
             contentType(ContentType.JSON)
         } When {
-            put("/{id}", bank.id)
+            put("/{id}", account.id)
         } Then {
             statusCode(400)
         }
@@ -406,17 +394,14 @@ class BankControllerTest {
             contentType(ContentType.JSON)
             body(mapOf<String, Any?>())
         } When {
-            put("/{id}", bank.id)
+            put("/{id}", account.id)
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("type").notNull(),
             )
         }
     }
@@ -424,46 +409,28 @@ class BankControllerTest {
     @Test
     @Order(17)
     fun updateNullValuesTest() {
-        Given {
-            contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to null,
-                    "name" to null,
-                ),
-            )
-        } When {
-            put("/{id}", bank.id)
-        } Then {
-            statusCode(400)
-            contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
-            )
+        body.apply {
+            clear()
+            put("name", null)
+            put("type", null)
+            put("bank", null)
+            put("branch", null)
+            put("number", null)
+            put("creditLimit", null)
         }
-    }
 
-    @ParameterizedTest
-    // TODO: Pode melhorar!
-    @NullAndEmptySource
-    @ValueSource(strings = [" ", "ABC", "12A", "@#$", "1234", "12"])
-    @Order(18)
-    fun updateInvalidCodeTest(invalidCode: String?) {
         Given {
             contentType(ContentType.JSON)
-            body(mapOf("code" to invalidCode, "name" to "Banco Atualizado"))
+            body(body)
         } When {
-            put("/{id}", bank.id)
+            put("/{id}", account.id)
         } Then {
             statusCode(400)
-            body(
-                "violations.field",
-                hasItem(containsString("update.body.code")),
+            contentType(ContentType.JSON)
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("type").notNull(),
             )
         }
     }
@@ -471,24 +438,31 @@ class BankControllerTest {
     @Test
     @Order(19)
     fun updateInvalidNameTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(256))
+            put("type", null)
+            put("bank", null)
+            put("branch", "A".repeat(256))
+            put("number", "A".repeat(256))
+            put("creditLimit", -1)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to "123",
-                    "name" to "A".repeat(151),
-                ),
-            )
+            body(body)
         } When {
-            put("/{id}", bank.id)
+            put("/{id}", account.id)
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations",
-                hasItems(updateNameSizeBetweenError),
+            checkError(
+                400,
+                Error.Update("name").size(1, 255),
+                Error.Update("type").notNull(),
+                Error.Update("branch").size(1, 255),
+                Error.Update("number").size(1, 255),
+                Error.Update("creditLimit").positiveOrZero(),
             )
         }
     }
@@ -496,33 +470,33 @@ class BankControllerTest {
     @Test
     @Order(20)
     fun updateSuccessTest() {
-        val code = "7".repeat(3)
-        val name = "B".repeat(150)
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("type", "SAVINGS")
+            put("bank", mapOf("id" to 2))
+            put("branch", "B".repeat(255))
+            put("number", "B".repeat(255))
+            put("creditLimit", 0)
+        }
 
-        bank =
+        account =
             Given {
                 contentType(ContentType.JSON)
-                body(
-                    mapOf<String, Any?>(
-                        "code" to code,
-                        "name" to name,
-                    ),
-                )
+                body(body)
             } When {
-                put("/{id}", bank.id)
+                put("/{id}", account.id)
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
-                body(
-                    "id",
-                    equalTo(bank.id?.toInt()),
-                    "code",
-                    equalTo(code),
-                    "name",
-                    equalTo(name),
-                )
+
+                body("id", equalTo(account.id?.toInt()))
+                body.remove("bank") // FIXME
+                body.forEach { (key, value) ->
+                    body(key, equalTo(value))
+                }
             } Extract {
-                body().parse(Bank::class)
+                body().parse(Account::class)
             }
     }
 
@@ -542,11 +516,11 @@ class BankControllerTest {
     @Order(22)
     fun checkUpdateTest() {
         When {
-            get("/{id}", bank.id)
+            get("/{id}", account.id)
         } Then {
             statusCode(200)
             contentType(ContentType.JSON)
-            body("$", equalTo(bank.toMap()))
+            body("$", equalTo(account.toMap()))
         }
     }
 
@@ -554,13 +528,18 @@ class BankControllerTest {
      * Delete
      */
     @ParameterizedTest
-    @ValueSource(strings = ["-1", "0", "999", "123456789ABCaç@!@#", "AAA"])
+    @ValueSource(strings = ["-1", "0", "999"])
     @Order(23)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -568,7 +547,7 @@ class BankControllerTest {
     @Order(24)
     fun deleteValidTest() {
         When {
-            delete("/{id}", bank.id)
+            delete("/{id}", account.id)
         } Then {
             statusCode(204)
         }
@@ -591,7 +570,7 @@ class BankControllerTest {
     @Order(26)
     fun deleteAlreadyDeletedTest() {
         When {
-            delete("/{id}", bank.id)
+            delete("/{id}", account.id)
         } Then {
             statusCode(404)
         }

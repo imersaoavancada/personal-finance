@@ -1,0 +1,32 @@
+meta {
+  name: Update Account
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{BASE_URL}}/accounts/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: {{account_id}}
+}
+
+body:json {
+  {
+    "name": "Conta Salário",
+    "type": "INVEST",
+    "bank": {
+      "id": 1
+    },
+    "branch": "654321",
+    "number": "1000",
+    "creditLimit": 100
+  }
+}
+
+script:post-response {
+  bru.setVar('account_id', res.body.id)
+}

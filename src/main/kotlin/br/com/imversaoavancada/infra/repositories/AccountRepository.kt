@@ -1,6 +1,6 @@
 package br.com.imversaoavancada.infra.repositories
 
-import br.com.imversaoavancada.entities.Bank
+import br.com.imversaoavancada.entities.Account
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepositoryBase
 import jakarta.enterprise.context.ApplicationScoped
 
@@ -8,6 +8,4 @@ import jakarta.enterprise.context.ApplicationScoped
  * @author Eduardo Folly
  */
 @ApplicationScoped
-class BankRepository : PanacheRepositoryBase<Bank, Long> {
-    fun findByCode(code: String): Bank? = find("code", code).firstResult()
-}
+class AccountRepository : PanacheRepositoryBase<Account, Long>

@@ -1,0 +1,28 @@
+meta {
+  name: Create Account
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/accounts
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Conta Salário",
+    "type": "SALARY",
+    "bank": {
+      "id": 2
+    },
+    "branch": "123456",
+    "number": "0001",
+    "creditLimit": 0
+  }
+}
+
+script:post-response {
+  bru.setVar('account_id', res.body.id)
+}

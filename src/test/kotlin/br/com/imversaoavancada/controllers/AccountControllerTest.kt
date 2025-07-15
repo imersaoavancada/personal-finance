@@ -372,6 +372,11 @@ class AccountControllerTest {
             put("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -489,7 +494,6 @@ class AccountControllerTest {
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
-
                 body("id", equalTo(account.id?.toInt()))
                 body.remove("bank") // FIXME
                 body.forEach { (key, value) ->
@@ -573,6 +577,11 @@ class AccountControllerTest {
             delete("/{id}", account.id)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(account.id),
+            )
         }
     }
 

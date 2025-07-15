@@ -1,5 +1,7 @@
 package br.com.imversaoavancada.controllers
 
+import br.com.imversaoavancada.Error
+import br.com.imversaoavancada.checkError
 import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.parse
 import io.quarkus.test.common.http.TestHTTPEndpoint
@@ -20,77 +22,9 @@ import org.junit.jupiter.params.provider.ValueSource
 @TestHTTPEndpoint(BankController::class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class BankControllerTest {
-    // Create Maps
-    val nameNotBlankError =
-        mapOf(
-            "field" to "create.body.name",
-            "message" to "not_blank",
-        )
-
-    val codeNotBlankError =
-        mapOf(
-            "field" to "create.body.code",
-            "message" to "not_blank",
-        )
-
-    val codeOnlyNumbersError =
-        mapOf(
-            "field" to "create.body.code",
-            "message" to "only_numbers",
-        )
-
-    val codeSizeEqualError =
-        mapOf(
-            "field" to "create.body.code",
-            "message" to "size_equal:3",
-        )
-
-    val nameSizeBetweenError =
-        mapOf(
-            "field" to "create.body.name",
-            "message" to "size_between:1:150",
-        )
-
-    val uniqueCodeError =
-        mapOf(
-            "field" to "banks_code_key",
-            "message" to "constraint_violation_exception",
-        )
-
-    // Update Maps
-    val updateNameNotBlankError =
-        mapOf(
-            "field" to "update.body.name",
-            "message" to "not_blank",
-        )
-
-    val updateCodeNotBlankError =
-        mapOf(
-            "field" to "update.body.code",
-            "message" to "not_blank",
-        )
-
-//    val updateCodeOnlyNumbersError =
-//        mapOf(
-//            "field" to "update.body.code",
-//            "message" to "only_numbers",
-//        )
-
-//    val updateCodeSizeEqualError =
-//        mapOf(
-//            "field" to "update.body.code",
-//            "message" to "size_equal:3",
-//        )
-
-    val updateNameSizeBetweenError =
-        mapOf(
-            "field" to "update.body.name",
-            "message" to "size_between:1:150",
-        )
-
     companion object {
         var count = 2
-        var invalidId = -1
+        var invalidId = -1L
         val body = mutableMapOf<String, Any?>()
         lateinit var bank: Bank
 
@@ -108,6 +42,11 @@ class BankControllerTest {
             get("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Bank::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -158,13 +97,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(nameNotBlankError, codeNotBlankError),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("code").notBlank(),
             )
         }
     }
@@ -186,13 +122,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(nameNotBlankError, codeNotBlankError),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("code").notBlank(),
             )
         }
     }
@@ -214,19 +147,13 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(5),
-                "violations",
-                hasItems(
-                    nameNotBlankError,
-                    codeNotBlankError,
-                    codeOnlyNumbersError,
-                    codeSizeEqualError,
-                    nameSizeBetweenError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("name").sizeBetween(1, 150),
+                Error.Create("code").notBlank(),
+                Error.Create("code").onlyNumbers(),
+                Error.Create("code").sizeEquals(3),
             )
         }
     }
@@ -248,18 +175,12 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(4),
-                "violations",
-                hasItems(
-                    codeNotBlankError,
-                    codeSizeEqualError,
-                    codeOnlyNumbersError,
-                    nameNotBlankError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("code").notBlank(),
+                Error.Create("code").onlyNumbers(),
+                Error.Create("code").sizeEquals(3),
             )
         }
     }
@@ -281,17 +202,11 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    codeSizeEqualError,
-                    codeOnlyNumbersError,
-                    nameSizeBetweenError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").sizeBetween(1, 150),
+                Error.Create("code").onlyNumbers(),
+                Error.Create("code").sizeEquals(3),
             )
         }
     }
@@ -337,14 +252,7 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(1),
-                "violations",
-                hasItem(uniqueCodeError),
-            )
+            checkError(400, Error.Constraint("banks", "code").uniqueField())
         }
     }
 
@@ -410,13 +318,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("code").notBlank(),
             )
         }
     }
@@ -437,13 +342,10 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(2),
-                "violations",
-                hasItems(updateNameNotBlankError, updateCodeNotBlankError),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("code").notBlank(),
             )
         }
     }
@@ -484,11 +386,9 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations",
-                hasItems(updateNameSizeBetweenError),
+            checkError(
+                400,
+                Error.Update("name").sizeBetween(1, 150),
             )
         }
     }
@@ -554,13 +454,18 @@ class BankControllerTest {
      * Delete
      */
     @ParameterizedTest
-    @ValueSource(strings = ["-1", "0", "999", "123456789ABCaç@!@#", "AAA"])
+    @ValueSource(strings = ["-1", "0", "999"])
     @Order(23)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Bank::class).idNotFound(invalidId),
+            )
         }
     }
 

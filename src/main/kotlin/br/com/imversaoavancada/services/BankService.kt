@@ -1,11 +1,11 @@
 package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.Bank
+import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.BankRepository
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
-import jakarta.ws.rs.NotFoundException
 
 /**
  * @author Eduardo Folly
@@ -36,7 +36,7 @@ class BankService(
 
     fun getById(id: Long): Bank =
         repository.findById(id)
-            ?: throw NotFoundException() // TODO: Create a error object.
+            ?: throw IdNotFoundException(id, Bank::class)
 
     @Transactional
     fun create(bank: Bank): Bank {

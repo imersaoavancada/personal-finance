@@ -1,0 +1,19 @@
+meta {
+  name: Delete Account
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{BASE_URL}}/accounts/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: {{account_id}}
+}
+
+assert {
+  res.status: eq 204
+}

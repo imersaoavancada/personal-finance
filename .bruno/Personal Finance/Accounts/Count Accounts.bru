@@ -1,17 +1,17 @@
 meta {
-  name: Count Banks
+  name: Count Accounts
   type: http
   seq: 1
 }
 
 get {
-  url: {{BASE_URL}}/banks/count?term=vazio
+  url: {{BASE_URL}}/accounts/count
   body: none
   auth: inherit
 }
 
 params:query {
-  term: vazio
+  ~term: vazio
 }
 
 assert {

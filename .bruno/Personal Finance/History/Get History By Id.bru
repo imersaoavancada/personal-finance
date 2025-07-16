@@ -1,0 +1,15 @@
+meta {
+  name: Get History By Id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{BASE_URL}}/histories/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: {{history_id}}
+}

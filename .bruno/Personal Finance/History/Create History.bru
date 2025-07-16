@@ -1,0 +1,23 @@
+meta {
+  name: Create History
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/histories
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Histórico 3",
+    "paymentDate": "2025-02-01T14:30:19.38Z",
+    "amount": 10000
+  }
+}
+
+script:post-response {
+  bru.setVar('history_id', res.body.id)
+}

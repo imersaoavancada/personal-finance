@@ -158,10 +158,10 @@ class AccountControllerTest {
             checkError(
                 400,
                 Error.Create("name").notBlank(),
-                Error.Create("name").size(1, 255),
+                Error.Create("name").sizeBetween(1, 255),
                 Error.Create("type").notNull(),
-                Error.Create("branch").size(1, 255),
-                Error.Create("number").size(1, 255),
+                Error.Create("branch").sizeBetween(1, 255),
+                Error.Create("number").sizeBetween(1, 255),
             )
         }
     }
@@ -197,7 +197,7 @@ class AccountControllerTest {
 
     @Test
     @Order(9)
-    fun insertWrongValuesTest() {
+    fun insertInvalidValuesTest() {
         body.apply {
             clear()
             put("name", "A".repeat(256))
@@ -218,10 +218,10 @@ class AccountControllerTest {
             contentType(ContentType.JSON)
             checkError(
                 400,
-                Error.Create("name").size(1, 255),
+                Error.Create("name").sizeBetween(1, 255),
                 Error.Create("type").notNull(),
-                Error.Create("branch").size(1, 255),
-                Error.Create("number").size(1, 255),
+                Error.Create("branch").sizeBetween(1, 255),
+                Error.Create("number").sizeBetween(1, 255),
                 Error.Create("creditLimit").positiveOrZero(),
             )
         }
@@ -253,7 +253,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     fun insertNullBankTest() {
         body.apply {
             clear()
@@ -278,7 +278,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(10)
+    @Order(12)
     fun insertInvalidBankTest() {
         body.apply {
             clear()
@@ -303,7 +303,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(11)
+    @Order(13)
     fun insertSuccessTest() {
         body.apply {
             clear()
@@ -337,7 +337,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(12)
+    @Order(14)
     fun secondCountTest() {
         When {
             get("/count")
@@ -349,7 +349,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(13)
+    @Order(15)
     fun getByIdValidTest() {
         When {
             get("/{id}", account.id)
@@ -363,7 +363,7 @@ class AccountControllerTest {
      * Update
      */
     @Test
-    @Order(14)
+    @Order(16)
     fun updateInvalidIdTest() {
         Given {
             contentType(ContentType.JSON)
@@ -372,11 +372,16 @@ class AccountControllerTest {
             put("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
         }
     }
 
     @Test
-    @Order(15)
+    @Order(17)
     fun updateEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -388,7 +393,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(16)
+    @Order(18)
     fun updateEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -407,7 +412,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(17)
+    @Order(19)
     fun updateNullValuesTest() {
         body.apply {
             clear()
@@ -436,7 +441,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(19)
+    @Order(20)
     fun updateInvalidNameTest() {
         body.apply {
             clear()
@@ -458,17 +463,17 @@ class AccountControllerTest {
             contentType(ContentType.JSON)
             checkError(
                 400,
-                Error.Update("name").size(1, 255),
+                Error.Update("name").sizeBetween(1, 255),
                 Error.Update("type").notNull(),
-                Error.Update("branch").size(1, 255),
-                Error.Update("number").size(1, 255),
+                Error.Update("branch").sizeBetween(1, 255),
+                Error.Update("number").sizeBetween(1, 255),
                 Error.Update("creditLimit").positiveOrZero(),
             )
         }
     }
 
     @Test
-    @Order(20)
+    @Order(21)
     fun updateSuccessTest() {
         body.apply {
             clear()
@@ -489,7 +494,6 @@ class AccountControllerTest {
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
-
                 body("id", equalTo(account.id?.toInt()))
                 body.remove("bank") // FIXME
                 body.forEach { (key, value) ->
@@ -501,7 +505,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(21)
+    @Order(22)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -513,7 +517,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(22)
+    @Order(23)
     fun checkUpdateTest() {
         When {
             get("/{id}", account.id)
@@ -525,11 +529,52 @@ class AccountControllerTest {
     }
 
     /*
+     * Search Term
+     */
+    @Test
+    @Order(24)
+    fun searchTermBlankTest() {
+        Given {
+            queryParams("term", " ")
+            contentType(ContentType.JSON)
+        } When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "size()",
+                equalTo(count),
+            )
+        }
+    }
+
+    @Test
+    @Order(25)
+    fun searchTermSuccessTest() {
+        Given {
+            queryParams("term", account.name)
+            contentType(ContentType.JSON)
+        } When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "size()",
+                equalTo(1),
+                "[0]",
+                equalTo(account.toMap()),
+            )
+        }
+    }
+
+    /*
      * Delete
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "999"])
-    @Order(23)
+    @Order(26)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -544,7 +589,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(24)
+    @Order(27)
     fun deleteValidTest() {
         When {
             delete("/{id}", account.id)
@@ -555,7 +600,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(25)
+    @Order(28)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -567,17 +612,22 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(29)
     fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", account.id)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(account.id),
+            )
         }
     }
 
     @Test
-    @Order(27)
+    @Order(30)
     fun finalListTest() {
         When {
             get()

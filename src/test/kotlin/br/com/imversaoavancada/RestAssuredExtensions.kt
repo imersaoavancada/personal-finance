@@ -26,6 +26,17 @@ sealed class Error(
         constructor(clazz: KClass<*>) : this(clazz.simpleName!!)
     }
 
+    class Constraint(
+        tableName: String,
+        field: String,
+    ) : Error(tableName, field) {
+        fun uniqueField(): Map<String, Any?> =
+            mapOf(
+                "field" to "$prefix.$field.key",
+                "message" to "constraint_violation_exception",
+            )
+    }
+
     fun notBlank(): Map<String, Any?> =
         mapOf(
             "field" to "$prefix.body.$field",
@@ -38,7 +49,13 @@ sealed class Error(
             "message" to "not_null",
         )
 
-    fun size(vararg numbers: Number): Map<String, Any?> =
+    fun sizeEquals(size: Number): Map<String, Any?> =
+        mapOf(
+            "field" to "$prefix.body.$field",
+            "message" to "size_equal:$size",
+        )
+
+    fun sizeBetween(vararg numbers: Number): Map<String, Any?> =
         mapOf(
             "field" to "$prefix.body.$field",
             "message" to listOf("size_between", *numbers).joinToString(":"),
@@ -54,6 +71,12 @@ sealed class Error(
         mapOf(
             "field" to field,
             "message" to "id_not_found:$id",
+        )
+
+    fun onlyNumbers(): Map<String, Any?> =
+        mapOf(
+            "field" to "$prefix.body.$field",
+            "message" to "only_numbers",
         )
 }
 

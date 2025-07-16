@@ -1,11 +1,12 @@
 package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.History
+import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
+import br.com.imversaoavancada.infra.repositories.AccountRepository
 import br.com.imversaoavancada.infra.repositories.HistoryRepository
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
-import jakarta.ws.rs.NotFoundException
 
 /**
  * @author Eduardo Folly
@@ -13,6 +14,7 @@ import jakarta.ws.rs.NotFoundException
 @ApplicationScoped
 class HistoryService(
     val repository: HistoryRepository,
+    val accountRepository: AccountRepository,
 ) {
     fun count(term: String?): Long = query(term).count()
 
@@ -28,18 +30,21 @@ class HistoryService(
         }
 
         return repository
-            .find(
-                "LOWER(name) LIKE ?1",
-                "%${term.lowercase()}%",
-            )
+            .find("LOWER(name) LIKE ?1", "%${term.lowercase()}%")
     }
 
     fun getById(id: Long): History =
         repository.findById(id)
-            ?: throw NotFoundException() // TODO: Create a error object.
+            ?: throw IdNotFoundException(id, History::class)
 
     @Transactional
     fun create(history: History): History {
+        history.account =
+            history.account?.let { account ->
+                account.id?.let { accountRepository.findById(it) }
+                    ?: throw IdNotFoundException(account.id, account::class)
+            }
+
         repository.persist(history)
         return history
     }
@@ -50,6 +55,12 @@ class HistoryService(
         history: History,
     ): History {
         val persisted = getById(id)
+
+        persisted.account =
+            history.account?.let { account ->
+                account.id?.let { accountRepository.findById(it) }
+                    ?: throw IdNotFoundException(account.id, account::class)
+            }
 
         persisted.name = history.name
         persisted.paymentDate = history.paymentDate

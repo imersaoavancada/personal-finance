@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.ValueSource
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AccountControllerTest {
     companion object {
-        var count = 2
+        var count = 3
         var invalidId = -1L
         val body = mutableMapOf<String, Any?>()
         lateinit var account: Account
@@ -254,7 +254,7 @@ class AccountControllerTest {
 
     @Test
     @Order(11)
-    fun insertNullBankTest() {
+    fun insertNullBankIdTest() {
         body.apply {
             clear()
             put("name", "A".repeat(255))
@@ -279,7 +279,7 @@ class AccountControllerTest {
 
     @Test
     @Order(12)
-    fun insertInvalidBankTest() {
+    fun insertInvalidBankIdTest() {
         body.apply {
             clear()
             put("name", "A".repeat(255))
@@ -324,7 +324,14 @@ class AccountControllerTest {
             statusCode(201)
             contentType(ContentType.JSON)
 
-            body("id", notNullValue())
+            body(
+                "id",
+                notNullValue(),
+                "createdAt",
+                notNullValue(),
+                "updatedAt",
+                notNullValue(),
+            )
             body.remove("bank") // FIXME
             body.forEach { (key, value) ->
                 body(key, equalTo(value))
@@ -474,6 +481,81 @@ class AccountControllerTest {
 
     @Test
     @Order(21)
+    fun updateEmptyBankTest() {
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("type", "SAVINGS")
+            put("bank", mapOf<String, Any?>())
+            put("branch", "B".repeat(255))
+            put("number", "B".repeat(255))
+            put("creditLimit", 0)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(404, Error.Update(Bank::class).idNotFound())
+        }
+    }
+
+    @Test
+    @Order(22)
+    fun updateNullBankIdTest() {
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("type", "SAVINGS")
+            put("bank", mapOf<String, Any?>("id" to null))
+            put("branch", "B".repeat(255))
+            put("number", "B".repeat(255))
+            put("creditLimit", 0)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(404, Error.Update(Bank::class).idNotFound())
+        }
+    }
+
+    @Test
+    @Order(23)
+    fun updateInvalidBankIdTest() {
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("type", "SAVINGS")
+            put("bank", mapOf<String, Any?>("id" to invalidId))
+            put("branch", "B".repeat(255))
+            put("number", "B".repeat(255))
+            put("creditLimit", 0)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(404, Error.Update(Bank::class).idNotFound(invalidId))
+        }
+    }
+
+    @Test
+    @Order(24)
     fun updateSuccessTest() {
         body.apply {
             clear()
@@ -494,7 +576,14 @@ class AccountControllerTest {
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
-                body("id", equalTo(account.id?.toInt()))
+                body(
+                    "id",
+                    equalTo(account.id?.toInt()),
+                    "createdAt",
+                    equalTo(account.createdAt.toString()),
+                    "updatedAt",
+                    notNullValue(),
+                )
                 body.remove("bank") // FIXME
                 body.forEach { (key, value) ->
                     body(key, equalTo(value))
@@ -505,7 +594,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(22)
+    @Order(25)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -517,7 +606,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(23)
+    @Order(26)
     fun checkUpdateTest() {
         When {
             get("/{id}", account.id)
@@ -532,7 +621,7 @@ class AccountControllerTest {
      * Search Term
      */
     @Test
-    @Order(24)
+    @Order(27)
     fun searchTermBlankTest() {
         Given {
             queryParams("term", " ")
@@ -550,7 +639,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(25)
+    @Order(28)
     fun searchTermSuccessTest() {
         Given {
             queryParams("term", account.name)
@@ -574,7 +663,7 @@ class AccountControllerTest {
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "999"])
-    @Order(26)
+    @Order(29)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -589,7 +678,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(27)
+    @Order(30)
     fun deleteValidTest() {
         When {
             delete("/{id}", account.id)
@@ -600,7 +689,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(28)
+    @Order(31)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -612,7 +701,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(29)
+    @Order(32)
     fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", account.id)
@@ -627,7 +716,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(30)
+    @Order(33)
     fun finalListTest() {
         When {
             get()

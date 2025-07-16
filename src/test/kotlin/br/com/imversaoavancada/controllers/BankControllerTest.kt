@@ -408,7 +408,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(20)
+    @Order(19)
     fun updateSuccessTest() {
         body.apply {
             clear()
@@ -435,7 +435,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(21)
+    @Order(20)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -447,7 +447,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(22)
+    @Order(21)
     fun checkUpdateTest() {
         When {
             get("/{id}", bank.id)
@@ -462,7 +462,7 @@ class BankControllerTest {
      * Search Term
      */
     @Test
-    @Order(23)
+    @Order(22)
     fun searchTermBlankTest() {
         Given {
             queryParams("term", " ")
@@ -480,7 +480,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(24)
+    @Order(23)
     fun searchTermSuccessTest() {
         Given {
             queryParams("term", bank.name)
@@ -504,7 +504,7 @@ class BankControllerTest {
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "999"])
-    @Order(25)
+    @Order(24)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -519,7 +519,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(25)
     fun deleteValidTest() {
         When {
             delete("/{id}", bank.id)

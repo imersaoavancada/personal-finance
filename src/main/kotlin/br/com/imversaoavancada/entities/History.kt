@@ -2,9 +2,7 @@ package br.com.imversaoavancada.entities
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
-import org.hibernate.annotations.ColumnDefault
-import org.hibernate.annotations.SQLDelete
-import org.hibernate.annotations.SQLRestriction
+import org.hibernate.annotations.*
 import java.time.Instant
 
 /**
@@ -35,7 +33,9 @@ class History : AbstractFullEntity() {
     @Column(nullable = false)
     var amount: Int? = null
 
-    // TODO: Account
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "account_id", nullable = true)
+    var account: Account? = null
 
     override fun toMap(): Map<String, Any?> =
         super.toMap() +
@@ -43,5 +43,6 @@ class History : AbstractFullEntity() {
                 "name" to name,
                 "paymentDate" to paymentDate.toString(),
                 "amount" to amount,
+                "account" to account?.toMap(),
             )
 }

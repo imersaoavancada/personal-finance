@@ -40,7 +40,7 @@ class TagControllerTest {
 
     val uniqueNameError =
         mapOf(
-            "field" to "tags_name_key",
+            "field" to "tags.name.key",
             "message" to "constraint_violation_exception",
         )
 

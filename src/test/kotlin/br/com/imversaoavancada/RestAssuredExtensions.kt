@@ -29,7 +29,13 @@ sealed class Error(
     class Constraint(
         tableName: String,
         field: String,
-    ) : Error(tableName, field)
+    ) : Error(tableName, field) {
+        fun uniqueField(): Map<String, Any?> =
+            mapOf(
+                "field" to "$prefix.$field.key",
+                "message" to "constraint_violation_exception",
+            )
+    }
 
     fun notBlank(): Map<String, Any?> =
         mapOf(
@@ -71,12 +77,6 @@ sealed class Error(
         mapOf(
             "field" to "$prefix.body.$field",
             "message" to "only_numbers",
-        )
-
-    fun uniqueField(): Map<String, Any?> =
-        mapOf(
-            "field" to "${prefix}_${field}_key",
-            "message" to "constraint_violation_exception",
         )
 }
 

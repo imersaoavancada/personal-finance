@@ -459,11 +459,52 @@ class BankControllerTest {
     }
 
     /*
+     * Search Term
+     */
+    @Test
+    @Order(23)
+    fun searchTermBlankTest() {
+        Given {
+            queryParams("term", " ")
+            contentType(ContentType.JSON)
+        } When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "size()",
+                equalTo(count),
+            )
+        }
+    }
+
+    @Test
+    @Order(24)
+    fun searchTermSuccessTest() {
+        Given {
+            queryParams("term", bank.name)
+            contentType(ContentType.JSON)
+        } When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "size()",
+                equalTo(1),
+                "[0]",
+                equalTo(bank.toMap()),
+            )
+        }
+    }
+
+    /*
      * Delete
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "999"])
-    @Order(23)
+    @Order(25)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -478,7 +519,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(24)
+    @Order(26)
     fun deleteValidTest() {
         When {
             delete("/{id}", bank.id)
@@ -489,7 +530,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(25)
+    @Order(26)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -501,7 +542,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(27)
     fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", bank.id)
@@ -516,7 +557,7 @@ class BankControllerTest {
     }
 
     @Test
-    @Order(27)
+    @Order(28)
     fun finalListTest() {
         When {
             get()

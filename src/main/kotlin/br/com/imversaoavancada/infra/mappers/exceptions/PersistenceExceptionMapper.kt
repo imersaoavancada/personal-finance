@@ -16,7 +16,7 @@ class PersistenceExceptionMapper : ExceptionMapper<PersistenceException> {
             when (exception) {
                 is ConstraintViolationException -> {
                     mapOf(
-                        "field" to exception.constraintName,
+                        "field" to exception.constraintName?.replace("_", "."),
                         "message" to "constraint_violation_exception",
                     )
                 }

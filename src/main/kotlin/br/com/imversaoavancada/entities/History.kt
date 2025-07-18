@@ -2,7 +2,9 @@ package br.com.imversaoavancada.entities
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
-import org.hibernate.annotations.*
+import org.hibernate.annotations.ColumnDefault
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.SQLRestriction
 import java.time.Instant
 
 /**

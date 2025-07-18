@@ -4,7 +4,6 @@ import br.com.imversaoavancada.entities.Account
 import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.AccountRepository
 import br.com.imversaoavancada.infra.repositories.BankRepository
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
@@ -16,22 +15,13 @@ class AccountService(
     val repository: AccountRepository,
     val bankRepository: BankRepository,
 ) {
-    fun count(term: String?): Long = query(term).count()
+    fun count(term: String?): Long = repository.count(term)
 
     fun listAll(
         page: Int,
         size: Int,
         term: String?,
-    ): List<Account> = query(term).page(page, size).list()
-
-    private fun query(term: String?): PanacheQuery<Account> {
-        if (term.isNullOrBlank()) {
-            return repository.findAll()
-        }
-
-        return repository
-            .find("LOWER(name) LIKE ?1", "%${term.lowercase()}%")
-    }
+    ): List<Account> = repository.list(page, size, term)
 
     fun getById(id: Long): Account =
         repository.findById(id)

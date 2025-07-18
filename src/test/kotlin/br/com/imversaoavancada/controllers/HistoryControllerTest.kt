@@ -5,6 +5,7 @@ import br.com.imversaoavancada.checkError
 import br.com.imversaoavancada.entities.Account
 import br.com.imversaoavancada.entities.History
 import br.com.imversaoavancada.parse
+import br.com.imversaoavancada.projections.HistoryListProjection
 import io.quarkus.test.common.http.TestHTTPEndpoint
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured
@@ -642,7 +643,7 @@ class HistoryControllerTest {
                 "size()",
                 equalTo(1),
                 "[0]",
-                equalTo(history.toMap()),
+                equalTo(HistoryListProjection.parse(history)),
             )
         }
     }

@@ -4,7 +4,7 @@ import br.com.imversaoavancada.entities.History
 import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.AccountRepository
 import br.com.imversaoavancada.infra.repositories.HistoryRepository
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
+import br.com.imversaoavancada.projections.HistoryListProjection
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
@@ -16,22 +16,13 @@ class HistoryService(
     val repository: HistoryRepository,
     val accountRepository: AccountRepository,
 ) {
-    fun count(term: String?): Long = query(term).count()
+    fun count(term: String?): Long = repository.count(term)
 
     fun listAll(
         page: Int,
         size: Int,
         term: String?,
-    ): List<History> = query(term).page(page, size).list()
-
-    private fun query(term: String?): PanacheQuery<History> {
-        if (term.isNullOrBlank()) {
-            return repository.findAll()
-        }
-
-        return repository
-            .find("LOWER(name) LIKE ?1", "%${term.lowercase()}%")
-    }
+    ): List<HistoryListProjection> = repository.list(page, size, term)
 
     fun getById(id: Long): History =
         repository.findById(id)

@@ -1,6 +1,7 @@
 package br.com.imversaoavancada.controllers
 
 import br.com.imversaoavancada.entities.History
+import br.com.imversaoavancada.projections.HistoryListProjection
 import br.com.imversaoavancada.services.HistoryService
 import jakarta.validation.Valid
 import jakarta.ws.rs.*
@@ -32,7 +33,7 @@ class HistoryController(
         @RestQuery @DefaultValue("0") page: Int,
         @RestQuery @DefaultValue("20") size: Int,
         @RestQuery term: String?,
-    ): List<History> = service.listAll(page, size, term)
+    ): List<HistoryListProjection> = service.listAll(page, size, term)
 
     @GET
     @Path("/{id}")

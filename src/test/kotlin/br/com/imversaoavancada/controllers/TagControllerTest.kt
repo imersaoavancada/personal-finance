@@ -63,16 +63,16 @@ class TagControllerTest {
             "message" to "size_between:1:255",
         )
 
-    val negativeColorNumberError =
-        mapOf(
-            "field" to "create.body.color",
-            "message" to "positive_or_zero",
-        )
-
     val minimumColorValueError =
         mapOf(
             "field" to "create.body.color",
             "message" to "min_value:0",
+        )
+
+    val maximumColorValueError =
+        mapOf(
+            "field" to "create.body.color",
+            "message" to "max_value:4294967295",
         )
 
     companion object {
@@ -263,11 +263,10 @@ class TagControllerTest {
                 "status",
                 equalTo(400),
                 "violations.size()",
-                equalTo(3),
+                equalTo(2),
                 "violations",
                 hasItems(
                     nameSizeBetweenError,
-                    negativeColorNumberError,
                     minimumColorValueError,
                 ),
             )
@@ -281,7 +280,7 @@ class TagControllerTest {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to 0x100000000L,
+                    "color" to 0x100000000,
                     "name" to "A".repeat(256),
                 ),
             )
@@ -298,6 +297,7 @@ class TagControllerTest {
                 "violations",
                 hasItems(
                     nameSizeBetweenError,
+                    maximumColorValueError,
                 ),
             )
         }
@@ -306,7 +306,7 @@ class TagControllerTest {
     @Test
     @Order(11)
     fun insertSuccessTest() {
-        val color = 0xFFFF00FFL
+        val color = 0xFFFF00FF
         val name = "A".repeat(255)
 
         tag = Given {
@@ -340,7 +340,7 @@ class TagControllerTest {
     @Test
     @Order(12)
     fun insertDuplicatedTest() {
-        val color = 0xFFFF00FFL
+        val color = 0xFFFF00FF
         val name = "A".repeat(255)
 
         Given {
@@ -400,7 +400,7 @@ class TagControllerTest {
             contentType(ContentType.JSON)
             body(
                 mapOf<String, Any?>(
-                    "color" to 0xFFFF00FFL,
+                    "color" to 0xFFFF00FF,
                     "name" to "Tag Teste",
                 ),
             )
@@ -500,7 +500,7 @@ class TagControllerTest {
     @Test
     @Order(20)
     fun updateSuccessTest() {
-        val color = 0xFFFF00FFL
+        val color = 0xFFFF00FF
         val name = "B".repeat(150)
 
         tag =

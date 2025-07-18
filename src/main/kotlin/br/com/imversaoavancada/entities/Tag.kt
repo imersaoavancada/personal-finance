@@ -25,8 +25,7 @@ class Tag : AbstractFullEntity() {
     var name: String? = null
 
     @NotNull(message = "not_null")
-    @PositiveOrZero(message = "positive_or_zero")
-    @Min(0, message = "min_value:{value}")
+    @Min(0x00000000, message = "min_value:{value}")
     @Max(0xFFFFFFFF, message = "max_value:{value}")
     @Column(name = "color", nullable = false)
     var color: Long? = null

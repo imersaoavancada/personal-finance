@@ -2,7 +2,6 @@ package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.Tag
 import br.com.imversaoavancada.infra.repositories.TagRepository
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
@@ -14,25 +13,13 @@ import jakarta.ws.rs.NotFoundException
 class TagService(
     val repository: TagRepository,
 ) {
-    fun count(term: String?): Long = query(term).count()
-
-    private fun query(term: String?): PanacheQuery<Tag> {
-        if (term.isNullOrBlank()) {
-            return repository.findAll()
-        }
-
-        return repository
-            .find(
-                "LOWER(name) LIKE ?1",
-                "%${term.lowercase()}%",
-            )
-    }
+    fun count(term: String?): Long = repository.count(term)
 
     fun listAll(
         page: Int,
         size: Int,
         term: String?,
-    ): List<Tag> = query(term).page(page, size).list()
+    ): List<Tag> = repository.list(page, size, term)
 
     fun getById(id: Long): Tag =
         repository.findById(id)

@@ -22,7 +22,7 @@ class HistoryService(
         page: Int,
         size: Int,
         term: String?,
-    ): List<HistoryListProjection> = repository.list(page, size, term)
+    ): List<HistoryListProjection> = repository.listProjected(page, size, term)
 
     fun getById(id: Long): History =
         repository.findById(id)

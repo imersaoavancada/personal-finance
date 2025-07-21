@@ -44,6 +44,18 @@ class TagControllerTest {
             "message" to "constraint_violation_exception",
         )
 
+    val minimumColorValueError =
+        mapOf(
+            "field" to "create.body.color",
+            "message" to "min_value:0",
+        )
+
+    val maximumColorValueError =
+        mapOf(
+            "field" to "create.body.color",
+            "message" to "max_value:4294967295",
+        )
+
     // Update Maps
     val updateNameNotBlankError =
         mapOf(
@@ -63,15 +75,15 @@ class TagControllerTest {
             "message" to "size_between:1:255",
         )
 
-    val minimumColorValueError =
+    val updateMinimumColorValueError =
         mapOf(
-            "field" to "create.body.color",
+            "field" to "update.body.color",
             "message" to "min_value:0",
         )
 
-    val maximumColorValueError =
+    val updateMaximumColorValueError =
         mapOf(
-            "field" to "create.body.color",
+            "field" to "update.body.color",
             "message" to "max_value:4294967295",
         )
 
@@ -491,14 +503,49 @@ class TagControllerTest {
             body(
                 "status",
                 equalTo(400),
+                "violations.size()",
+                equalTo(2),
                 "violations",
-                hasItems(updateNameSizeBetweenError),
+                hasItems(
+                    updateMinimumColorValueError,
+                    updateNameSizeBetweenError,
+                ),
             )
         }
     }
 
     @Test
     @Order(20)
+    fun updateWrongValuesNumberBiggerThanLimitTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(
+                mapOf<String, Any?>(
+                    "color" to 0x100000000,
+                    "name" to "A".repeat(256),
+                ),
+            )
+        } When {
+            put("/{id}", tag.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            body(
+                "status",
+                equalTo(400),
+                "violations.size()",
+                equalTo(2),
+                "violations",
+                hasItems(
+                    updateMaximumColorValueError,
+                    updateNameSizeBetweenError,
+                ),
+            )
+        }
+    }
+
+    @Test
+    @Order(21)
     fun updateSuccessTest() {
         val color = 0xFFFF00FF
         val name = "B".repeat(150)
@@ -531,7 +578,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(21)
+    @Order(22)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -543,7 +590,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(22)
+    @Order(23)
     fun checkUpdateTest() {
         When {
             get("/{id}", tag.id)
@@ -559,7 +606,7 @@ class TagControllerTest {
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
-    @Order(23)
+    @Order(24)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -569,7 +616,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(24)
+    @Order(25)
     fun deleteValidTest() {
         When {
             delete("/{id}", tag.id)
@@ -580,7 +627,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(25)
+    @Order(26)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -592,7 +639,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(27)
     fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", tag.id)
@@ -602,7 +649,7 @@ class TagControllerTest {
     }
 
     @Test
-    @Order(27)
+    @Order(28)
     fun finalListTest() {
         When {
             get()

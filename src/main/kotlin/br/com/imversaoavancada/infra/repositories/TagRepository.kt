@@ -1,7 +1,6 @@
 package br.com.imversaoavancada.infra.repositories
 
 import br.com.imversaoavancada.entities.Tag
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 
 /**

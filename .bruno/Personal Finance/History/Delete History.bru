@@ -1,0 +1,19 @@
+meta {
+  name: Delete History
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{BASE_URL}}/histories/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: {{history_id}}
+}
+
+assert {
+  res.status: eq 204
+}

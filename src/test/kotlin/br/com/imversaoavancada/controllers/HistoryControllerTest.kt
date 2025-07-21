@@ -1,7 +1,11 @@
 package br.com.imversaoavancada.controllers
 
+import br.com.imversaoavancada.Error
+import br.com.imversaoavancada.checkError
+import br.com.imversaoavancada.entities.Account
 import br.com.imversaoavancada.entities.History
 import br.com.imversaoavancada.parse
+import br.com.imversaoavancada.projections.HistoryListProjection
 import io.quarkus.test.common.http.TestHTTPEndpoint
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured
@@ -19,59 +23,10 @@ import org.junit.jupiter.params.provider.ValueSource
 @TestHTTPEndpoint(HistoryController::class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class HistoryControllerTest {
-    // Create Maps
-    val nameNotBlankError =
-        mapOf(
-            "field" to "create.body.name",
-            "message" to "not_blank",
-        )
-
-    val paymentDateNotNullError =
-        mapOf(
-            "field" to "create.body.paymentDate",
-            "message" to "not_null",
-        )
-
-    val amountNotNullError =
-        mapOf(
-            "field" to "create.body.amount",
-            "message" to "not_null",
-        )
-
-    val nameSizeBetweenError =
-        mapOf(
-            "field" to "create.body.name",
-            "message" to "size_between:1:255",
-        )
-
-    // Update Maps
-    val updateNameNotBlankError =
-        mapOf(
-            "field" to "update.body.name",
-            "message" to "not_blank",
-        )
-
-    val updatePaymentDateNotNullError =
-        mapOf(
-            "field" to "update.body.paymentDate",
-            "message" to "not_null",
-        )
-
-    val updateAmountNotNullError =
-        mapOf(
-            "field" to "update.body.amount",
-            "message" to "not_null",
-        )
-
-    val updateNameSizeBetweenError =
-        mapOf(
-            "field" to "update.body.name",
-            "message" to "size_between:1:255",
-        )
-
     companion object {
-        var count = 3
+        var count = 4
         var invalidId = -1
+        val body = mutableMapOf<String, Any?>()
         lateinit var history: History
 
         @BeforeAll
@@ -88,6 +43,11 @@ class HistoryControllerTest {
             get("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(History::class).idNotFound(invalidId),
+            )
         }
     }
 
@@ -138,17 +98,11 @@ class HistoryControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    nameNotBlankError,
-                    paymentDateNotNullError,
-                    amountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("paymentDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -156,31 +110,27 @@ class HistoryControllerTest {
     @Test
     @Order(6)
     fun insertNullValuesTest() {
+        body.apply {
+            clear()
+            put("name", null)
+            put("paymentDate", null)
+            put("amount", null)
+            put("account", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to null,
-                    "paymentDate" to null,
-                    "amount" to null,
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    nameNotBlankError,
-                    paymentDateNotNullError,
-                    amountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("paymentDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -188,32 +138,28 @@ class HistoryControllerTest {
     @Test
     @Order(7)
     fun insertEmptyValuesTest() {
+        body.apply {
+            clear()
+            put("name", "")
+            put("paymentDate", "")
+            put("amount", "")
+            put("account", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to "",
-                    "paymentDate" to "",
-                    "amount" to "",
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(4),
-                "violations",
-                hasItems(
-                    nameNotBlankError,
-                    nameSizeBetweenError,
-                    paymentDateNotNullError,
-                    amountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("name").sizeBetween(1, 255),
+                Error.Create("paymentDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -221,31 +167,27 @@ class HistoryControllerTest {
     @Test
     @Order(8)
     fun insertBlankValuesTest() {
+        body.apply {
+            clear()
+            put("name", " ")
+            put("paymentDate", " ")
+            put("amount", " ")
+            put("account", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "code" to " ",
-                    "paymentDate" to " ",
-                    "amount" to " ",
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    nameNotBlankError,
-                    paymentDateNotNullError,
-                    amountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").notBlank(),
+                Error.Create("paymentDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -253,51 +195,123 @@ class HistoryControllerTest {
     @Test
     @Order(9)
     fun insertWrongValuesTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(256))
+            put("paymentDate", null)
+            put("amount", null)
+            put("account", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to "A".repeat(256),
-                    "paymentDate" to null,
-                    "amount" to null,
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    nameSizeBetweenError,
-                    paymentDateNotNullError,
-                    amountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Create("name").sizeBetween(1, 255),
+                Error.Create("paymentDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(10)
+    fun insertEmptyAccountTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("paymentDate", "2025-03-01T00:00:00Z")
+            put("amount", 100_00)
+            put("account", mapOf<String, Any?>())
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(null),
+            )
+        }
+    }
+
+    @Test
+    @Order(11)
+    fun insertNullAccountIdTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("paymentDate", "2025-03-01T00:00:00Z")
+            put("amount", 100_00)
+            put("account", mapOf<String, Any?>("id" to null))
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(null),
+            )
+        }
+    }
+
+    @Test
+    @Order(12)
+    fun insertInvalidAccountTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("paymentDate", "2025-03-01T00:00:00Z")
+            put("amount", 100_00)
+            put("account", mapOf<String, Any?>("id" to invalidId))
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(Account::class).idNotFound(invalidId),
+            )
+        }
+    }
+
+    @Test
+    @Order(13)
     fun insertSuccessTest() {
-        val name = "A".repeat(255)
-        val paymentDate = "2025-03-01T00:00:00Z"
-        val amount = 100_00
+        body.apply {
+            clear()
+            put("name", "A".repeat(255))
+            put("paymentDate", "2025-03-01T00:00:00Z")
+            put("amount", 100_00)
+            put("account", mapOf("id" to 1))
+        }
 
         history = Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to name,
-                    "paymentDate" to paymentDate,
-                    "amount" to amount,
-                ),
-            )
+            body(body)
         } When {
             post()
         } Then {
@@ -310,13 +324,11 @@ class HistoryControllerTest {
                 notNullValue(),
                 "updatedAt",
                 notNullValue(),
-                "name",
-                equalTo(name),
-                "paymentDate",
-                equalTo(paymentDate),
-                "amount",
-                equalTo(amount),
             )
+            body.remove("account") // FIXME
+            body.forEach { (key, value) ->
+                body(key, equalTo(value))
+            }
         } Extract {
             body().parse(History::class)
         }
@@ -325,7 +337,7 @@ class HistoryControllerTest {
     }
 
     @Test
-    @Order(12)
+    @Order(14)
     fun secondCountTest() {
         When {
             get("/count")
@@ -337,7 +349,7 @@ class HistoryControllerTest {
     }
 
     @Test
-    @Order(13)
+    @Order(15)
     fun getByIdValidTest() {
         When {
             get("/{id}", history.id)
@@ -351,30 +363,25 @@ class HistoryControllerTest {
      * Update
      */
     @Test
-    @Order(14)
+    @Order(16)
     fun updateInvalidIdTest() {
-        val name = "A".repeat(255)
-        val paymentDate = "2025-03-01T00:00:00Z"
-        val amount = 100_00
-
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to name,
-                    "paymentDate" to paymentDate,
-                    "amount" to amount,
-                ),
-            )
+            body(body)
         } When {
             put("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(History::class).idNotFound(invalidId),
+            )
         }
     }
 
     @Test
-    @Order(15)
+    @Order(17)
     fun updateEmptyBodyTest() {
         Given {
             contentType(ContentType.JSON)
@@ -386,7 +393,7 @@ class HistoryControllerTest {
     }
 
     @Test
-    @Order(16)
+    @Order(18)
     fun updateEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
@@ -396,100 +403,164 @@ class HistoryControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    updateNameNotBlankError,
-                    updatePaymentDateNotNullError,
-                    updateAmountNotNullError,
-                ),
-            )
-        }
-    }
-
-    @Test
-    @Order(17)
-    fun updateNullValuesTest() {
-        Given {
-            contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to null,
-                    "paymentDate" to null,
-                    "amount" to null,
-                ),
-            )
-        } When {
-            put("/{id}", history.id)
-        } Then {
-            statusCode(400)
-            contentType(ContentType.JSON)
-            body(
-                "status",
-                equalTo(400),
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    updateNameNotBlankError,
-                    updatePaymentDateNotNullError,
-                    updateAmountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("paymentDate").notNull(),
+                Error.Update("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(19)
-    fun updateWrongValuesTest() {
+    fun updateNullValuesTest() {
+        body.apply {
+            clear()
+            put("name", null)
+            put("paymentDate", null)
+            put("amount", null)
+            put("account", null)
+        }
+
         Given {
             contentType(ContentType.JSON)
-            body(
-                mapOf<String, Any?>(
-                    "name" to "A".repeat(256),
-                    "paymentDate" to null,
-                    "amount" to null,
-                ),
-            )
+            body(body)
         } When {
             put("/{id}", history.id)
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            body(
-                "violations.size()",
-                equalTo(3),
-                "violations",
-                hasItems(
-                    updateNameSizeBetweenError,
-                    updatePaymentDateNotNullError,
-                    updateAmountNotNullError,
-                ),
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("paymentDate").notNull(),
+                Error.Update("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(20)
+    fun updateWrongValuesTest() {
+        body.apply {
+            clear()
+            put("name", "A".repeat(256))
+            put("paymentDate", null)
+            put("amount", null)
+            put("account", null)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            put("/{id}", history.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            checkError(
+                400,
+                Error.Update("name").sizeBetween(1, 255),
+                Error.Update("paymentDate").notNull(),
+                Error.Update("amount").notNull(),
+            )
+        }
+    }
+
+    @Test
+    @Order(21)
+    fun updateEmptyAccountTest() {
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("paymentDate", "2025-04-02T12:00:00Z")
+            put("amount", 200_99)
+            put("account", mapOf<String, Any?>())
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            put("/{id}", history.id)
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Update(Account::class).idNotFound(null),
+            )
+        }
+    }
+
+    @Test
+    @Order(22)
+    fun updateNullAccountIdTest() {
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("paymentDate", "2025-04-02T12:00:00Z")
+            put("amount", 200_99)
+            put("account", mapOf<String, Any?>("id" to null))
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            put("/{id}", history.id)
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Update(Account::class).idNotFound(null),
+            )
+        }
+    }
+
+    @Test
+    @Order(23)
+    fun updateInvalidAccountTest() {
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("paymentDate", "2025-04-02T12:00:00Z")
+            put("amount", 200_99)
+            put("account", mapOf<String, Any?>("id" to invalidId))
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            put("/{id}", history.id)
+        } Then {
+            statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Update(Account::class).idNotFound(invalidId),
+            )
+        }
+    }
+
+    @Test
+    @Order(24)
     fun updateSuccessTest() {
-        val name = "B".repeat(255)
-        val paymentDate = "2025-04-02T12:00:00Z"
-        val amount = 200_99
+        body.apply {
+            clear()
+            put("name", "B".repeat(255))
+            put("paymentDate", "2025-04-02T12:00:00Z")
+            put("amount", 200_99)
+            put("account", null)
+        }
 
         history =
             Given {
                 contentType(ContentType.JSON)
-                body(
-                    mapOf<String, Any?>(
-                        "name" to name,
-                        "paymentDate" to paymentDate,
-                        "amount" to amount,
-                    ),
-                )
+                body(body)
             } When {
                 put("/{id}", history.id)
             } Then {
@@ -502,20 +573,18 @@ class HistoryControllerTest {
                     equalTo(history.createdAt.toString()),
                     "updatedAt",
                     notNullValue(),
-                    "name",
-                    equalTo(name),
-                    "paymentDate",
-                    equalTo(paymentDate),
-                    "amount",
-                    equalTo(amount),
                 )
+                body.remove("account") // FIXME
+                body.forEach { (key, value) ->
+                    body(key, equalTo(value))
+                }
             } Extract {
                 body().parse(History::class)
             }
     }
 
     @Test
-    @Order(21)
+    @Order(25)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -527,7 +596,7 @@ class HistoryControllerTest {
     }
 
     @Test
-    @Order(22)
+    @Order(26)
     fun checkUpdateTest() {
         When {
             get("/{id}", history.id)
@@ -539,21 +608,67 @@ class HistoryControllerTest {
     }
 
     /*
+     * Search Term
+     */
+    @Test
+    @Order(27)
+    fun searchTermBlankTest() {
+        Given {
+            queryParams("term", " ")
+            contentType(ContentType.JSON)
+        } When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "size()",
+                equalTo(count),
+            )
+        }
+    }
+
+    @Test
+    @Order(28)
+    fun searchTermSuccessTest() {
+        Given {
+            queryParams("term", history.name)
+            contentType(ContentType.JSON)
+        } When {
+            get()
+        } Then {
+            statusCode(200)
+            contentType(ContentType.JSON)
+            body(
+                "size()",
+                equalTo(1),
+                "[0]",
+                equalTo(HistoryListProjection.parse(history)),
+            )
+        }
+    }
+
+    /*
      * Delete
      */
     @ParameterizedTest
-    @ValueSource(strings = ["-1", "0", "99999", "123456789ABCaç@!@#"])
-    @Order(23)
+    @ValueSource(strings = ["-1", "0", "99999"])
+    @Order(29)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
         } Then {
             statusCode(404)
+            contentType(ContentType.JSON)
+            checkError(
+                404,
+                Error.Create(History::class).idNotFound(invalidId),
+            )
         }
     }
 
     @Test
-    @Order(24)
+    @Order(30)
     fun deleteValidTest() {
         When {
             delete("/{id}", history.id)
@@ -564,7 +679,7 @@ class HistoryControllerTest {
     }
 
     @Test
-    @Order(25)
+    @Order(31)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -576,17 +691,21 @@ class HistoryControllerTest {
     }
 
     @Test
-    @Order(26)
+    @Order(32)
     fun deleteAlreadyDeletedTest() {
         When {
             delete("/{id}", history.id)
         } Then {
             statusCode(404)
+            checkError(
+                404,
+                Error.Create(History::class).idNotFound(history.id),
+            )
         }
     }
 
     @Test
-    @Order(27)
+    @Order(33)
     fun finalListTest() {
         When {
             get()

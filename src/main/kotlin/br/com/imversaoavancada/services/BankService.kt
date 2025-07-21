@@ -3,7 +3,6 @@ package br.com.imversaoavancada.services
 import br.com.imversaoavancada.entities.Bank
 import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.BankRepository
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
@@ -14,25 +13,13 @@ import jakarta.transaction.Transactional
 class BankService(
     val repository: BankRepository,
 ) {
-    fun count(term: String?): Long = query(term).count()
+    fun count(term: String?): Long = repository.count(term)
 
     fun listAll(
         page: Int,
         size: Int,
         term: String?,
-    ): List<Bank> = query(term).page(page, size).list()
-
-    private fun query(term: String?): PanacheQuery<Bank> {
-        if (term.isNullOrBlank()) {
-            return repository.findAll()
-        }
-
-        return repository
-            .find(
-                "LOWER(code) LIKE ?1 OR LOWER(name) LIKE ?1",
-                "%${term.lowercase()}%",
-            )
-    }
+    ): List<Bank> = repository.list(page, size, term)
 
     fun getById(id: Long): Bank =
         repository.findById(id)
@@ -60,7 +47,5 @@ class BankService(
     }
 
     @Transactional
-    fun delete(id: Long) {
-        repository.delete(getById(id))
-    }
+    fun delete(id: Long) = repository.delete(getById(id))
 }

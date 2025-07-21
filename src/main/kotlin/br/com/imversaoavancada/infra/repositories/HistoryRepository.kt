@@ -2,24 +2,16 @@ package br.com.imversaoavancada.infra.repositories
 
 import br.com.imversaoavancada.entities.History
 import br.com.imversaoavancada.projections.HistoryListProjection
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepositoryBase
 import jakarta.enterprise.context.ApplicationScoped
 
 /**
  * @author Eduardo Folly
  */
 @ApplicationScoped
-class HistoryRepository : PanacheRepositoryBase<History, Long> {
-    private val searchQuery = "LOWER(history.name) LIKE ?1"
+class HistoryRepository : AbstractRepository<History>() {
+    override val searchQuery = "LOWER(history.name) LIKE ?1"
 
-    fun count(term: String?): Long =
-        if (term.isNullOrBlank()) {
-            findAll()
-        } else {
-            find(searchQuery, "%${term.lowercase()}%")
-        }.count()
-
-    fun list(
+    fun listProjected(
         page: Int,
         size: Int,
         term: String?,

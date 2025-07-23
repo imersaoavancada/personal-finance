@@ -13,20 +13,16 @@ import org.hibernate.annotations.SQLRestriction
 @Entity
 @Table(name = "tags")
 @SQLDelete(sql = "UPDATE tags SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at is NULL")
+@SQLRestriction("deleted_at = '1970-01-01 00:00:00+00'")
 class Tag : AbstractFullEntity() {
-    @NotBlank(message = "not_blank")
-    @Size(
-        min = 1,
-        max = 255,
-        message = "size_between:{min}:{max}",
-    )
+    @NotBlank
+    @Size(min = 1, max = 255)
     @Column(length = 255, nullable = false, unique = true)
     var name: String? = null
 
-    @NotNull(message = "not_null")
-    @Min(0x00000000, message = "min_value:{value}")
-    @Max(0xFFFFFFFF, message = "max_value:{value}")
+    @NotNull
+    @Min(0x00000000)
+    @Max(0xFFFFFFFF)
     @Column(name = "color", nullable = false)
     var color: Long? = null
 

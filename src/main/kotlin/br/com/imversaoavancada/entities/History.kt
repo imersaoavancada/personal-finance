@@ -13,10 +13,10 @@ import java.time.Instant
 @Entity
 @Table(name = "histories")
 @SQLDelete(sql = "UPDATE histories SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
+@SQLRestriction("deleted_at = '1970-01-01 00:00:00+00'")
 class History : AbstractFullEntity() {
-    @NotBlank(message = "not_blank")
-    @Size(min = 1, max = 255, message = "size_between:{min}:{max}")
+    @NotBlank
+    @Size(min = 1, max = 255)
     @Column(length = 255, nullable = false)
     var name: String? = null
 
@@ -24,13 +24,13 @@ class History : AbstractFullEntity() {
 
     // TODO: Provision Date
 
-    @NotNull(message = "not_null")
+    @NotNull
     @Column(name = "payment_date", nullable = false)
     var paymentDate: Instant? = null
 
     // TODO: List<Tag>
 
-    @NotNull(message = "not_null")
+    @NotNull
     @ColumnDefault("0")
     @Column(nullable = false)
     var amount: Int? = null

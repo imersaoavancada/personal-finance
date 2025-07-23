@@ -32,7 +32,7 @@ sealed class Error(
     ) : Error(tableName, field) {
         fun uniqueField(): Map<String, Any?> =
             mapOf(
-                "field" to "$prefix.$field.key",
+                "field" to "$prefix.$field",
                 "message" to "constraint_violation_exception",
             )
     }

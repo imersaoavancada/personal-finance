@@ -28,7 +28,13 @@ class History : AbstractFullEntity() {
     @Column(name = "payment_date", nullable = false)
     var paymentDate: Instant? = null
 
-    // TODO: List<Tag>
+    @ManyToMany(fetch = FetchType.EAGER, targetEntity = Tag::class)
+    @JoinTable(
+        name = "histories_tags",
+        joinColumns = [JoinColumn("history_id")],
+        inverseJoinColumns = [JoinColumn("tag_id")],
+    )
+    var tags: MutableSet<Tag>? = mutableSetOf()
 
     @NotNull
     @ColumnDefault("0")
@@ -46,5 +52,6 @@ class History : AbstractFullEntity() {
                 "paymentDate" to paymentDate.toString(),
                 "amount" to amount,
                 "account" to account?.toMap(),
+                "tags" to tags?.map { it.toMap() },
             )
 }

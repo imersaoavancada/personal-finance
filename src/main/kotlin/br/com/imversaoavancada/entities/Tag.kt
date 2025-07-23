@@ -1,7 +1,10 @@
 package br.com.imversaoavancada.entities
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.Table
 import jakarta.validation.constraints.*
 import org.hibernate.annotations.SQLDelete
@@ -25,6 +28,14 @@ class Tag : AbstractFullEntity() {
     @Max(0xFFFFFFFF)
     @Column(name = "color", nullable = false)
     var color: Long? = null
+
+    @JsonIgnore
+    @ManyToMany(
+        mappedBy = "tags",
+        fetch = FetchType.LAZY,
+        targetEntity = History::class,
+    )
+    var histories: MutableSet<History>? = null
 
     override fun toMap(): Map<String, Any?> =
         super.toMap() +

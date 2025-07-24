@@ -11,18 +11,27 @@ import org.hibernate.annotations.SQLRestriction
  * @author Eduardo Folly
  */
 @Entity
-@Table(name = "banks")
+@Table(
+    name = "banks",
+    indexes = [
+        Index(
+            name = "banks_code_unq",
+            unique = true,
+            columnList = "code, deleted_at",
+        ),
+    ],
+)
 @SQLDelete(sql = "UPDATE banks SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
+@SQLRestriction("deleted_at = '1970-01-01 00:00:00+00'")
 class Bank : AbstractFullEntity() {
-    @NotBlank(message = "not_blank")
-    @Size(min = 3, max = 3, message = "size_equal:{min}")
+    @NotBlank
+    @Size(min = 3, max = 3)
     @Pattern(regexp = "\\d{3}", message = "only_numbers")
-    @Column(length = 3, nullable = false, unique = true)
+    @Column(length = 3, nullable = false)
     var code: String? = null
 
-    @NotBlank(message = "not_blank")
-    @Size(min = 1, max = 150, message = "size_between:{min}:{max}")
+    @NotBlank
+    @Size(min = 1, max = 150)
     @Column(length = 150, nullable = false)
     var name: String? = null
 

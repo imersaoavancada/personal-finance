@@ -22,9 +22,10 @@ abstract class AbstractFullEntity : AbstractEntity() {
     var updatedAt: Instant? = null
 
     @JsonIgnore
+    @ColumnDefault("'1970-01-01 00:00:00+00'::timestamp with time zone")
     @Column(name = "deleted_at")
     @Suppress("unused")
-    var deletedAt: Instant? = null
+    var deletedAt: Instant = Instant.ofEpochMilli(0)
 
     override fun toMap(): Map<String, Any?> =
         super.toMap() +

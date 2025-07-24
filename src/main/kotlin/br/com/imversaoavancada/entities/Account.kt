@@ -13,14 +13,14 @@ import org.hibernate.annotations.SQLRestriction
 @Entity
 @Table(name = "accounts")
 @SQLDelete(sql = "UPDATE accounts SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
+@SQLRestriction("deleted_at = '1970-01-01 00:00:00+00'")
 class Account : AbstractFullEntity() {
-    @NotBlank(message = "not_blank")
-    @Size(min = 1, max = 255, message = "size_between:{min}:{max}")
+    @NotBlank
+    @Size(min = 1, max = 255)
     @Column(length = 255, nullable = false)
     var name: String? = null
 
-    @NotNull(message = "not_null")
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
     var type: AccountType? = null
@@ -29,16 +29,16 @@ class Account : AbstractFullEntity() {
     @JoinColumn(name = "bank_id", nullable = true)
     var bank: Bank? = null
 
-    @Size(min = 1, max = 255, message = "size_between:{min}:{max}")
+    @Size(min = 1, max = 255)
     @Column(length = 255, nullable = true)
     var branch: String? = null
 
-    @Size(min = 1, max = 255, message = "size_between:{min}:{max}")
+    @Size(min = 1, max = 255)
     @Column(name = "account_number", length = 255, nullable = true)
     var number: String? = null
 
     @ColumnDefault("0")
-    @PositiveOrZero(message = "positive_or_zero")
+    @PositiveOrZero
     @Column(name = "credit_limit")
     var creditLimit: Int = 0
 

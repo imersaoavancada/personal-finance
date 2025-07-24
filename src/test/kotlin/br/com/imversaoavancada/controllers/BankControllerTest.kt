@@ -38,7 +38,7 @@ class BankControllerTest {
         @JvmStatic
         fun updateInvalidCodes(): List<Arguments> {
             val notBlank = Error.Update("code").notBlank()
-            val sizeEqual = Error.Update("code").sizeEquals(3)
+            val sizeBetween = Error.Update("code").sizeBetween(3, 3)
             val onlyNumbers = Error.Update("code").onlyNumbers()
             val nameSizeBetween = Error.Update("name").sizeBetween(1, 150)
 
@@ -46,22 +46,32 @@ class BankControllerTest {
                 Arguments.of(null, arrayOf(notBlank, nameSizeBetween)),
                 Arguments.of(
                     "",
-                    arrayOf(notBlank, sizeEqual, onlyNumbers, nameSizeBetween),
+                    arrayOf(
+                        notBlank,
+                        sizeBetween,
+                        onlyNumbers,
+                        nameSizeBetween,
+                    ),
                 ),
                 Arguments.of(
                     " ",
-                    arrayOf(notBlank, sizeEqual, onlyNumbers, nameSizeBetween),
+                    arrayOf(
+                        notBlank,
+                        sizeBetween,
+                        onlyNumbers,
+                        nameSizeBetween,
+                    ),
                 ),
                 Arguments.of("ABC", arrayOf(onlyNumbers, nameSizeBetween)),
                 Arguments.of("12A", arrayOf(onlyNumbers, nameSizeBetween)),
                 Arguments.of("@#$", arrayOf(onlyNumbers, nameSizeBetween)),
                 Arguments.of(
                     "1234",
-                    arrayOf(sizeEqual, onlyNumbers, nameSizeBetween),
+                    arrayOf(sizeBetween, onlyNumbers, nameSizeBetween),
                 ),
                 Arguments.of(
                     "12",
-                    arrayOf(sizeEqual, onlyNumbers, nameSizeBetween),
+                    arrayOf(sizeBetween, onlyNumbers, nameSizeBetween),
                 ),
             )
         }
@@ -185,7 +195,7 @@ class BankControllerTest {
                 Error.Create("name").sizeBetween(1, 150),
                 Error.Create("code").notBlank(),
                 Error.Create("code").onlyNumbers(),
-                Error.Create("code").sizeEquals(3),
+                Error.Create("code").sizeBetween(3, 3),
             )
         }
     }
@@ -212,7 +222,7 @@ class BankControllerTest {
                 Error.Create("name").notBlank(),
                 Error.Create("code").notBlank(),
                 Error.Create("code").onlyNumbers(),
-                Error.Create("code").sizeEquals(3),
+                Error.Create("code").sizeBetween(3, 3),
             )
         }
     }
@@ -238,7 +248,7 @@ class BankControllerTest {
                 400,
                 Error.Create("name").sizeBetween(1, 150),
                 Error.Create("code").onlyNumbers(),
-                Error.Create("code").sizeEquals(3),
+                Error.Create("code").sizeBetween(3, 3),
             )
         }
     }
@@ -284,7 +294,7 @@ class BankControllerTest {
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
-            checkError(400, Error.Constraint("banks", "code").uniqueField())
+            checkError(400, Error.Constraint("banks", "code.unq").uniqueField())
         }
     }
 
@@ -566,5 +576,34 @@ class BankControllerTest {
             contentType(ContentType.JSON)
             body("size()", equalTo(count))
         }
+    }
+
+    @Test
+    @Order(29)
+    fun finalInsertSuccessTest() {
+        body.apply {
+            clear()
+            put("code", "7".repeat(3))
+            put("name", "B".repeat(150))
+        }
+
+        bank = Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            post()
+        } Then {
+            statusCode(201)
+            contentType(ContentType.JSON)
+
+            body("id", notNullValue())
+            body.forEach { (key, value) ->
+                body(key, equalTo(value))
+            }
+        } Extract {
+            body().parse(Bank::class)
+        }
+
+        count++
     }
 }

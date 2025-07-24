@@ -1,7 +1,6 @@
 package br.com.imversaoavancada.controllers
 
 import br.com.imversaoavancada.entities.History
-import br.com.imversaoavancada.projections.HistoryListProjection
 import br.com.imversaoavancada.services.HistoryService
 import jakarta.validation.Valid
 import jakarta.ws.rs.*

@@ -3,7 +3,9 @@
 import br.com.imversaoavancada.entities.Provision
 import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.ProvisionRepository
+import jakarta.enterprise.context.ApplicationScoped
 
+@ApplicationScoped
 class ProvisionService(
     val repository: ProvisionRepository,
 ) {

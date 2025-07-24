@@ -27,18 +27,18 @@ class ProvisionController(
         @PathParam("id") id: Long,
     ): Response = service.getById(id).run { Response.ok(this).build() }
 
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    fun create(
-        @Valid body: Provision?,
-    ): Response =
-        body?.let {
-            service.create(it).run {
-                Response
-                    .created(path(this))
-                    .entity(this)
-                    .build()
-            }
-        } ?: Response.status(400).build()
+//    @POST
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_JSON)
+//    fun create(
+//        @Valid body: Provision?,
+//    ): Response =
+//        body?.let {
+//            service.create(it).run {
+//                Response
+//                    .created(path(this))
+//                    .entity(this)
+//                    .build()
+//            }
+//        } ?: Response.status(400).build()
 }

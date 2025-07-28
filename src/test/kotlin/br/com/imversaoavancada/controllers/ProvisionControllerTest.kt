@@ -2,8 +2,7 @@ package br.com.imversaoavancada.controllers
 
 import br.com.imversaoavancada.Error
 import br.com.imversaoavancada.checkError
-import br.com.imversaoavancada.entities.Account
-import br.com.imversaoavancada.entities.Bank
+import br.com.imversaoavancada.entities.Provision
 import br.com.imversaoavancada.parse
 import io.quarkus.test.common.http.TestHTTPEndpoint
 import io.quarkus.test.junit.QuarkusTest
@@ -19,14 +18,14 @@ import org.junit.jupiter.params.provider.ValueSource
  * @author Eduardo Folly
  */
 @QuarkusTest
-@TestHTTPEndpoint(AccountController::class)
+@TestHTTPEndpoint(ProvisionController::class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-class AccountControllerTest {
+class ProvisionControllerTest {
     companion object {
-        var count = 3
+        var count = 2
         var invalidId = -1L
         val body = mutableMapOf<String, Any?>()
-        lateinit var account: Account
+        lateinit var provision: Provision
 
         @BeforeAll
         @JvmStatic
@@ -45,7 +44,7 @@ class AccountControllerTest {
             contentType(ContentType.JSON)
             checkError(
                 404,
-                Error.Create(Account::class).idNotFound(invalidId),
+                Error.Create(Provision::class).idNotFound(invalidId),
             )
         }
     }
@@ -100,7 +99,8 @@ class AccountControllerTest {
             checkError(
                 400,
                 Error.Create("name").notBlank(),
-                Error.Create("type").notNull(),
+                Error.Create("initialDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -111,11 +111,9 @@ class AccountControllerTest {
         body.apply {
             clear()
             put("name", null)
-            put("type", null)
-            put("bank", null)
-            put("branch", null)
-            put("number", null)
-            put("creditLimit", null)
+            put("initialDate", null)
+            put("finalDate", null)
+            put("amount", null)
         }
 
         Given {
@@ -129,7 +127,8 @@ class AccountControllerTest {
             checkError(
                 400,
                 Error.Create("name").notBlank(),
-                Error.Create("type").notNull(),
+                Error.Create("initialDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -140,11 +139,9 @@ class AccountControllerTest {
         body.apply {
             clear()
             put("name", "")
-            put("type", null)
-            put("bank", null)
-            put("branch", "")
-            put("number", "")
-            put("creditLimit", null)
+            put("initialDate", "")
+            put("finalDate", "")
+            put("amount", "")
         }
 
         Given {
@@ -159,9 +156,8 @@ class AccountControllerTest {
                 400,
                 Error.Create("name").notBlank(),
                 Error.Create("name").sizeBetween(1, 255),
-                Error.Create("type").notNull(),
-                Error.Create("branch").sizeBetween(1, 255),
-                Error.Create("number").sizeBetween(1, 255),
+                Error.Create("initialDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -172,11 +168,9 @@ class AccountControllerTest {
         body.apply {
             clear()
             put("name", " ")
-            put("type", null)
-            put("bank", null)
-            put("branch", " ")
-            put("number", " ")
-            put("creditLimit", null)
+            put("initialDate", " ")
+            put("finalDate", " ")
+            put("amount", " ")
         }
 
         Given {
@@ -190,7 +184,8 @@ class AccountControllerTest {
             checkError(
                 400,
                 Error.Create("name").notBlank(),
-                Error.Create("type").notNull(),
+                Error.Create("initialDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
@@ -201,11 +196,9 @@ class AccountControllerTest {
         body.apply {
             clear()
             put("name", "A".repeat(256))
-            put("type", null)
-            put("bank", null)
-            put("branch", "A".repeat(256))
-            put("number", "A".repeat(256))
-            put("creditLimit", -1)
+            put("initialDate", "")
+            put("finalDate", "")
+            put("amount", null)
         }
 
         Given {
@@ -219,103 +212,24 @@ class AccountControllerTest {
             checkError(
                 400,
                 Error.Create("name").sizeBetween(1, 255),
-                Error.Create("type").notNull(),
-                Error.Create("branch").sizeBetween(1, 255),
-                Error.Create("number").sizeBetween(1, 255),
-                Error.Create("creditLimit").positiveOrZero(),
+                Error.Create("initialDate").notNull(),
+                Error.Create("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(10)
-    fun insertEmptyBankTest() {
-        body.apply {
-            clear()
-            put("name", "A".repeat(255))
-            put("type", "CHECKING")
-            put("bank", mapOf<String, Any?>())
-            put("branch", "A".repeat(255))
-            put("number", "A".repeat(255))
-            put("creditLimit", 0)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            post()
-        } Then {
-            statusCode(404)
-            contentType(ContentType.JSON)
-            checkError(404, Error.Create(Bank::class).idNotFound())
-        }
-    }
-
-    @Test
-    @Order(11)
-    fun insertNullBankIdTest() {
-        body.apply {
-            clear()
-            put("name", "A".repeat(255))
-            put("type", "CHECKING")
-            put("bank", mapOf<String, Any?>("id" to null))
-            put("branch", "A".repeat(255))
-            put("number", "A".repeat(255))
-            put("creditLimit", 0)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            post()
-        } Then {
-            statusCode(404)
-            contentType(ContentType.JSON)
-            checkError(404, Error.Create(Bank::class).idNotFound())
-        }
-    }
-
-    @Test
-    @Order(12)
-    fun insertInvalidBankIdTest() {
-        body.apply {
-            clear()
-            put("name", "A".repeat(255))
-            put("type", "CHECKING")
-            put("bank", mapOf<String, Any?>("id" to invalidId))
-            put("branch", "A".repeat(255))
-            put("number", "A".repeat(255))
-            put("creditLimit", 0)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            post()
-        } Then {
-            statusCode(404)
-            contentType(ContentType.JSON)
-            checkError(404, Error.Create(Bank::class).idNotFound(invalidId))
-        }
-    }
-
-    @Test
-    @Order(13)
     fun insertSuccessTest() {
         body.apply {
             clear()
             put("name", "A".repeat(255))
-            put("type", "CHECKING")
-            put("bank", mapOf("id" to 1))
-            put("branch", "A".repeat(255))
-            put("number", "A".repeat(255))
-            put("creditLimit", 0)
+            put("initialDate", "2025-02-01T12:00:00Z")
+            put("finalDate", null)
+            put("amount", 99900)
         }
 
-        account = Given {
+        provision = Given {
             contentType(ContentType.JSON)
             body(body)
         } When {
@@ -332,19 +246,18 @@ class AccountControllerTest {
                 "updatedAt",
                 notNullValue(),
             )
-            body.remove("bank") // FIXME
             body.forEach { (key, value) ->
                 body(key, equalTo(value))
             }
         } Extract {
-            body().parse(Account::class)
+            body().parse(Provision::class)
         }
 
         count++
     }
 
     @Test
-    @Order(14)
+    @Order(11)
     fun secondCountTest() {
         When {
             get("/count")
@@ -356,13 +269,20 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(15)
+    @Order(12)
     fun getByIdValidTest() {
         When {
-            get("/{id}", account.id)
+            get("/{id}", provision.id)
         } Then {
             statusCode(200)
-            body("$", equalTo(account.toMap()))
+            body(
+                "$",
+                notNullValue(),
+                *provision
+                    .toMap()
+                    .flatMap { listOf(it.key, equalTo(it.value)) }
+                    .toTypedArray(),
+            )
         }
     }
 
@@ -370,7 +290,7 @@ class AccountControllerTest {
      * Update
      */
     @Test
-    @Order(16)
+    @Order(13)
     fun updateInvalidIdTest() {
         Given {
             contentType(ContentType.JSON)
@@ -382,280 +302,194 @@ class AccountControllerTest {
             contentType(ContentType.JSON)
             checkError(
                 404,
-                Error.Create(Account::class).idNotFound(invalidId),
+                Error.Create(Provision::class).idNotFound(invalidId),
+            )
+        }
+    }
+
+    @Test
+    @Order(14)
+    fun updateEmptyBodyTest() {
+        Given {
+            contentType(ContentType.JSON)
+        } When {
+            put("/{id}", provision.id)
+        } Then {
+            statusCode(400)
+        }
+    }
+
+    @Test
+    @Order(15)
+    fun updateEmptyObjectTest() {
+        Given {
+            contentType(ContentType.JSON)
+            body(mapOf<String, Any?>())
+        } When {
+            put("/{id}", provision.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("initialDate").notNull(),
+                Error.Update("amount").notNull(),
+            )
+        }
+    }
+
+    @Test
+    @Order(16)
+    fun updateNullValuesTest() {
+        body.apply {
+            clear()
+            put("name", null)
+            put("initialDate", null)
+            put("finalDate", null)
+            put("amount", null)
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            put("/{id}", provision.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("initialDate").notNull(),
+                Error.Update("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(17)
-    fun updateEmptyBodyTest() {
-        Given {
-            contentType(ContentType.JSON)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(400)
+    fun updateEmptyTest() {
+        body.apply {
+            clear()
+            put("name", "")
+            put("initialDate", "")
+            put("finalDate", "")
+            put("amount", "")
         }
-    }
 
-    @Test
-    @Order(18)
-    fun updateEmptyObjectTest() {
         Given {
             contentType(ContentType.JSON)
-            body(mapOf<String, Any?>())
+            body(body)
         } When {
-            put("/{id}", account.id)
+            put("/{id}", provision.id)
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
             checkError(
                 400,
                 Error.Update("name").notBlank(),
-                Error.Update("type").notNull(),
+                Error.Update("name").sizeBetween(1, 255),
+                Error.Update("initialDate").notNull(),
+                Error.Update("amount").notNull(),
+            )
+        }
+    }
+
+    @Test
+    @Order(18)
+    fun updateBlankTest() {
+        body.apply {
+            clear()
+            put("name", " ")
+            put("initialDate", " ")
+            put("finalDate", " ")
+            put("amount", " ")
+        }
+
+        Given {
+            contentType(ContentType.JSON)
+            body(body)
+        } When {
+            put("/{id}", provision.id)
+        } Then {
+            statusCode(400)
+            contentType(ContentType.JSON)
+            checkError(
+                400,
+                Error.Update("name").notBlank(),
+                Error.Update("initialDate").notNull(),
+                Error.Update("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(19)
-    fun updateNullValuesTest() {
+    fun updateInvalidTest() {
         body.apply {
             clear()
-            put("name", null)
-            put("type", null)
-            put("bank", null)
-            put("branch", null)
-            put("number", null)
-            put("creditLimit", null)
+            put("name", "B".repeat(256))
+            put("initialDate", "")
+            put("finalDate", "")
+            put("amount", null)
         }
 
         Given {
             contentType(ContentType.JSON)
             body(body)
         } When {
-            put("/{id}", account.id)
+            put("/{id}", provision.id)
         } Then {
             statusCode(400)
             contentType(ContentType.JSON)
             checkError(
                 400,
-                Error.Update("name").notBlank(),
-                Error.Update("type").notNull(),
+                Error.Update("name").sizeBetween(1, 255),
+                Error.Update("initialDate").notNull(),
+                Error.Update("amount").notNull(),
             )
         }
     }
 
     @Test
     @Order(20)
-    fun updateEmptyValuesTest() {
-        body.apply {
-            clear()
-            put("name", "")
-            put("type", null)
-            put("bank", null)
-            put("branch", "")
-            put("number", "")
-            put("creditLimit", null)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(400)
-            contentType(ContentType.JSON)
-            checkError(
-                400,
-                Error.Update("name").notBlank(),
-                Error.Update("name").sizeBetween(1, 255),
-                Error.Update("type").notNull(),
-                Error.Update("branch").sizeBetween(1, 255),
-                Error.Update("number").sizeBetween(1, 255),
-            )
-        }
-    }
-
-    @Test
-    @Order(21)
-    fun updateBlankValuesTest() {
-        body.apply {
-            clear()
-            put("name", " ")
-            put("type", null)
-            put("bank", null)
-            put("branch", " ")
-            put("number", " ")
-            put("creditLimit", null)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(400)
-            contentType(ContentType.JSON)
-            checkError(
-                400,
-                Error.Update("name").notBlank(),
-                Error.Update("type").notNull(),
-            )
-        }
-    }
-
-    @Test
-    @Order(22)
-    fun updateInvalidTest() {
-        body.apply {
-            clear()
-            put("name", "A".repeat(256))
-            put("type", null)
-            put("bank", null)
-            put("branch", "A".repeat(256))
-            put("number", "A".repeat(256))
-            put("creditLimit", -1)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(400)
-            contentType(ContentType.JSON)
-            checkError(
-                400,
-                Error.Update("name").sizeBetween(1, 255),
-                Error.Update("type").notNull(),
-                Error.Update("branch").sizeBetween(1, 255),
-                Error.Update("number").sizeBetween(1, 255),
-                Error.Update("creditLimit").positiveOrZero(),
-            )
-        }
-    }
-
-    @Test
-    @Order(23)
-    fun updateEmptyBankTest() {
-        body.apply {
-            clear()
-            put("name", "B".repeat(255))
-            put("type", "SAVINGS")
-            put("bank", mapOf<String, Any?>())
-            put("branch", "B".repeat(255))
-            put("number", "B".repeat(255))
-            put("creditLimit", 0)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(404)
-            contentType(ContentType.JSON)
-            checkError(404, Error.Update(Bank::class).idNotFound())
-        }
-    }
-
-    @Test
-    @Order(24)
-    fun updateNullBankIdTest() {
-        body.apply {
-            clear()
-            put("name", "B".repeat(255))
-            put("type", "SAVINGS")
-            put("bank", mapOf<String, Any?>("id" to null))
-            put("branch", "B".repeat(255))
-            put("number", "B".repeat(255))
-            put("creditLimit", 0)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(404)
-            contentType(ContentType.JSON)
-            checkError(404, Error.Update(Bank::class).idNotFound())
-        }
-    }
-
-    @Test
-    @Order(25)
-    fun updateInvalidBankIdTest() {
-        body.apply {
-            clear()
-            put("name", "B".repeat(255))
-            put("type", "SAVINGS")
-            put("bank", mapOf<String, Any?>("id" to invalidId))
-            put("branch", "B".repeat(255))
-            put("number", "B".repeat(255))
-            put("creditLimit", 0)
-        }
-
-        Given {
-            contentType(ContentType.JSON)
-            body(body)
-        } When {
-            put("/{id}", account.id)
-        } Then {
-            statusCode(404)
-            contentType(ContentType.JSON)
-            checkError(404, Error.Update(Bank::class).idNotFound(invalidId))
-        }
-    }
-
-    @Test
-    @Order(26)
     fun updateSuccessTest() {
         body.apply {
             clear()
             put("name", "B".repeat(255))
-            put("type", "SAVINGS")
-            put("bank", mapOf("id" to 2))
-            put("branch", "B".repeat(255))
-            put("number", "B".repeat(255))
-            put("creditLimit", 0)
+            put("initialDate", "2025-04-01T12:00:00Z")
+            put("finalDate", "2025-12-01T12:00:00Z")
+            put("amount", 88899)
         }
 
-        account =
+        provision =
             Given {
                 contentType(ContentType.JSON)
                 body(body)
             } When {
-                put("/{id}", account.id)
+                put("/{id}", provision.id)
             } Then {
                 statusCode(200)
                 contentType(ContentType.JSON)
                 body(
                     "id",
-                    equalTo(account.id?.toInt()),
+                    equalTo(provision.id?.toInt()),
                     "createdAt",
-                    equalTo(account.createdAt.toString()),
+                    equalTo(provision.createdAt.toString()),
                     "updatedAt",
                     notNullValue(),
                 )
-                body.remove("bank") // FIXME
                 body.forEach { (key, value) ->
                     body(key, equalTo(value))
                 }
             } Extract {
-                body().parse(Account::class)
+                body().parse(Provision::class)
             }
     }
 
     @Test
-    @Order(27)
+    @Order(21)
     fun thirdCountTest() {
         When {
             get("/count")
@@ -667,14 +501,14 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(28)
+    @Order(22)
     fun checkUpdateTest() {
         When {
-            get("/{id}", account.id)
+            get("/{id}", provision.id)
         } Then {
             statusCode(200)
             contentType(ContentType.JSON)
-            body("$", equalTo(account.toMap()))
+            body("$", equalTo(provision.toMap()))
         }
     }
 
@@ -682,7 +516,7 @@ class AccountControllerTest {
      * Search Term
      */
     @Test
-    @Order(29)
+    @Order(23)
     fun searchTermBlankTest() {
         Given {
             queryParams("term", " ")
@@ -700,10 +534,10 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(30)
+    @Order(24)
     fun searchTermSuccessTest() {
         Given {
-            queryParams("term", account.name)
+            queryParams("term", provision.name)
             contentType(ContentType.JSON)
         } When {
             get()
@@ -714,7 +548,7 @@ class AccountControllerTest {
                 "size()",
                 equalTo(1),
                 "[0]",
-                equalTo(account.toMap()),
+                equalTo(provision.toMap()),
             )
         }
     }
@@ -724,7 +558,7 @@ class AccountControllerTest {
      */
     @ParameterizedTest
     @ValueSource(strings = ["-1", "0", "999"])
-    @Order(31)
+    @Order(25)
     fun deleteInvalidTest(invalidId: String) {
         When {
             delete("/{id}", invalidId)
@@ -733,16 +567,16 @@ class AccountControllerTest {
             contentType(ContentType.JSON)
             checkError(
                 404,
-                Error.Create(Account::class).idNotFound(invalidId),
+                Error.Create(Provision::class).idNotFound(invalidId),
             )
         }
     }
 
     @Test
-    @Order(32)
+    @Order(26)
     fun deleteValidTest() {
         When {
-            delete("/{id}", account.id)
+            delete("/{id}", provision.id)
         } Then {
             statusCode(204)
         }
@@ -750,7 +584,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(33)
+    @Order(27)
     fun fourthCountTest() {
         When {
             get("/count")
@@ -762,22 +596,22 @@ class AccountControllerTest {
     }
 
     @Test
-    @Order(34)
+    @Order(28)
     fun deleteAlreadyDeletedTest() {
         When {
-            delete("/{id}", account.id)
+            delete("/{id}", provision.id)
         } Then {
             statusCode(404)
             contentType(ContentType.JSON)
             checkError(
                 404,
-                Error.Create(Account::class).idNotFound(account.id),
+                Error.Create(Provision::class).idNotFound(provision.id),
             )
         }
     }
 
     @Test
-    @Order(35)
+    @Order(29)
     fun finalListTest() {
         When {
             get()

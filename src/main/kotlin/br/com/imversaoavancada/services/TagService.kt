@@ -1,10 +1,10 @@
 package br.com.imversaoavancada.services
 
 import br.com.imversaoavancada.entities.Tag
+import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
 import br.com.imversaoavancada.infra.repositories.TagRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
-import jakarta.ws.rs.NotFoundException
 
 /**
  * @author Douglas O. Luciano
@@ -22,8 +22,7 @@ class TagService(
     ): List<Tag> = repository.list(page, size, term)
 
     fun getById(id: Long): Tag =
-        repository.findById(id)
-            ?: throw NotFoundException()
+        repository.findById(id) ?: throw IdNotFoundException(id, Tag::class)
 
     @Transactional
     fun create(tag: Tag): Tag {

@@ -64,7 +64,5 @@ class AccountService(
     }
 
     @Transactional
-    fun delete(id: Long) {
-        repository.delete(getById(id))
-    }
+    fun delete(id: Long) = repository.delete(getById(id))
 }

@@ -1,7 +1,7 @@
 meta {
   name: Create Bank
   type: http
-  seq: 2
+  seq: 3
 }
 
 post {
@@ -12,7 +12,11 @@ post {
 
 body:json {
   {
-    "code": "999",
+    "code": "111",
     "name": "Banco da Verdade"
   }
+}
+
+script:post-response {
+  bru.setVar('bank_id', res.body.id)
 }

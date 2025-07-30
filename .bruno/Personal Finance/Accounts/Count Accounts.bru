@@ -1,0 +1,19 @@
+meta {
+  name: Count Accounts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/accounts/count
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~term: vazio
+}
+
+assert {
+  res.status: eq 200
+}

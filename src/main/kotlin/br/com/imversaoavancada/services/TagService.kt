@@ -1,17 +1,17 @@
 package br.com.imversaoavancada.services
 
-import br.com.imversaoavancada.entities.Bank
+import br.com.imversaoavancada.entities.Tag
 import br.com.imversaoavancada.infra.exceptions.IdNotFoundException
-import br.com.imversaoavancada.infra.repositories.BankRepository
+import br.com.imversaoavancada.infra.repositories.TagRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 /**
- * @author Eduardo Folly
+ * @author Douglas O. Luciano
  */
 @ApplicationScoped
-class BankService(
-    val repository: BankRepository,
+class TagService(
+    val repository: TagRepository,
 ) {
     fun count(term: String?): Long = repository.count(term)
 
@@ -19,27 +19,26 @@ class BankService(
         page: Int,
         size: Int,
         term: String?,
-    ): List<Bank> = repository.list(page, size, term)
+    ): List<Tag> = repository.list(page, size, term)
 
-    fun getById(id: Long): Bank =
-        repository.findById(id)
-            ?: throw IdNotFoundException(id, Bank::class)
+    fun getById(id: Long): Tag =
+        repository.findById(id) ?: throw IdNotFoundException(id, Tag::class)
 
     @Transactional
-    fun create(bank: Bank): Bank {
-        repository.persist(bank)
-        return bank
+    fun create(tag: Tag): Tag {
+        repository.persist(tag)
+        return tag
     }
 
     @Transactional
     fun update(
         id: Long,
-        bank: Bank,
-    ): Bank {
+        tag: Tag,
+    ): Tag {
         val persisted = getById(id)
 
-        persisted.code = bank.code
-        persisted.name = bank.name
+        persisted.name = tag.name
+        persisted.color = tag.color
 
         repository.persist(persisted)
 

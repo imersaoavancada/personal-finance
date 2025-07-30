@@ -1,15 +1,15 @@
 meta {
-  name: Get Bank By Id
+  name: Get Account By Id
   type: http
   seq: 4
 }
 
 get {
-  url: {{BASE_URL}}/banks/:id
+  url: {{BASE_URL}}/accounts/:id
   body: none
   auth: inherit
 }
 
 params:path {
-  id: {{bank_id}}
+  id: {{account_id}}
 }

@@ -1,0 +1,23 @@
+meta {
+  name: Update History
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{BASE_URL}}/histories/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: {{history_id}}
+}
+
+body:json {
+  {
+    "name": "Novo Histórico 3",
+    "paymentDate": "2025-02-01T15:40:29.48Z",
+    "amount": 20000
+  }
+}

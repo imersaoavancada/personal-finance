@@ -1,7 +1,7 @@
-package br.com.imversaoavancada.controllers
+﻿package br.com.imversaoavancada.controllers
 
-import br.com.imversaoavancada.entities.Bank
-import br.com.imversaoavancada.services.BankService
+import br.com.imversaoavancada.entities.Provision
+import br.com.imversaoavancada.services.ProvisionService
 import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -10,13 +10,14 @@ import org.jboss.resteasy.reactive.RestQuery
 import java.net.URI
 
 /**
- * @author Eduardo Folly
+ * @author: William Braziellas
  */
-@Path("/banks")
-class BankController(
-    val service: BankService,
+@Path("/provisions")
+class ProvisionController(
+    val service: ProvisionService,
 ) {
-    private fun path(bank: Bank): URI = URI.create("/banks/${bank.id}")
+    private fun path(provision: Provision): URI =
+        URI.create("/provisions/${provision.id}")
 
     @GET
     @Path("/count")
@@ -45,7 +46,7 @@ class BankController(
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun create(
-        @Valid body: Bank?,
+        @Valid body: Provision?,
     ): Response =
         body?.let {
             service.create(it).run {
@@ -62,7 +63,7 @@ class BankController(
     @Produces(MediaType.APPLICATION_JSON)
     fun update(
         @PathParam("id") id: Long,
-        @Valid body: Bank?,
+        @Valid body: Provision?,
     ): Response =
         body?.let {
             service.update(id, it).run {

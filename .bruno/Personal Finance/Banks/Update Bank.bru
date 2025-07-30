@@ -1,7 +1,7 @@
 meta {
   name: Update Bank
   type: http
-  seq: 4
+  seq: 5
 }
 
 put {
@@ -11,12 +11,12 @@ put {
 }
 
 params:path {
-  id: 1
+  id: {{bank_id}}
 }
 
 body:json {
   {
-    "code": "888",
+    "code": "222",
     "name": "Banco da Mentira"
   }
 }

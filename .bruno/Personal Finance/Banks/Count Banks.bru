@@ -1,0 +1,19 @@
+meta {
+  name: Count Banks
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/banks/count?term=vazio
+  body: none
+  auth: inherit
+}
+
+params:query {
+  term: vazio
+}
+
+assert {
+  res.status: eq 200
+}

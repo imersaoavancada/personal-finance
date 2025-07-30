@@ -1,7 +1,7 @@
 package br.com.imversaoavancada.controllers
 
-import br.com.imversaoavancada.entities.Bank
-import br.com.imversaoavancada.services.BankService
+import br.com.imversaoavancada.entities.History
+import br.com.imversaoavancada.services.HistoryService
 import jakarta.validation.Valid
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -12,11 +12,12 @@ import java.net.URI
 /**
  * @author Eduardo Folly
  */
-@Path("/banks")
-class BankController(
-    val service: BankService,
+@Path("/histories")
+class HistoryController(
+    val service: HistoryService,
 ) {
-    private fun path(bank: Bank): URI = URI.create("/banks/${bank.id}")
+    private fun path(history: History): URI =
+        URI.create("/histories/${history.id}")
 
     @GET
     @Path("/count")
@@ -45,7 +46,7 @@ class BankController(
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun create(
-        @Valid body: Bank?,
+        @Valid body: History?,
     ): Response =
         body?.let {
             service.create(it).run {
@@ -62,7 +63,7 @@ class BankController(
     @Produces(MediaType.APPLICATION_JSON)
     fun update(
         @PathParam("id") id: Long,
-        @Valid body: Bank?,
+        @Valid body: History?,
     ): Response =
         body?.let {
             service.update(id, it).run {

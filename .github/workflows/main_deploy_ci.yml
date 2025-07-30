@@ -1,0 +1,94 @@
+name: Deploy from Main
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      REGISTRY: ghcr.io
+    permissions:
+      packages: write
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      # Fazer checkout do código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Preparar o ambiente da JVM
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+
+      # Configuração do ktlint
+      - name: Setup ktlint
+        run: |
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.7.1/ktlint
+          chmod a+x ktlint
+          sudo mv ktlint /usr/local/bin/
+
+      # Executar o Ktlint
+      - name: Run linter
+        run: ktlint
+
+      # Adquirir a versão do projeto
+      - name: Get version
+        run: |
+          VERSION=$(grep 'version = ' build.gradle.kts | cut -f 2 -d "\"")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Verificar se a versão não está em uso
+      - name: Check if version is used
+        run: |
+          URL=$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/tags/v${{ env.VERSION }}
+          echo "$URL"
+          CODE=$(curl -s -H "Authorization: Bearer ${{ github.token }}" -o /dev/null -w "%{http_code}" "$URL")
+          if [ "$CODE" != 404 ]; then
+            echo "Release '$VERSION' already exists. ($CODE)"
+            exit 1
+          fi
+
+      # Executar os build
+      - name: Tests & Build
+        run: ./gradlew build --no-daemon
+
+      # Logar no Registry
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Criar imagem do container
+      - name: Docker Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: src/main/docker/Dockerfile.jvm
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ github.repository }}:latest
+
+      # Criar uma tag no git com a versão
+      - name: Creating GitHub Tag
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          custom_tag: ${{ env.VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Criar uma release no git com a versão
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ env.VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}

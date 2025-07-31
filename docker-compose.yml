@@ -1,0 +1,71 @@
+secrets:
+  PFI_DB_PASSWORD:
+    external: true
+
+networks:
+  pf-internal:
+  traefik-public:
+    external: true
+
+volumes:
+  database_data:
+
+services:
+  database:
+    image: timescale/timescaledb:2.20.3-pg17
+    networks:
+      - pf-internal
+      - traefik-public
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    secrets:
+      - PFI_DB_PASSWORD
+    environment:
+      POSTGRES_USER: finance
+      POSTGRES_PASSWORD_FILE: /run/secrets/PFI_DB_PASSWORD
+      POSTGRES_DB: personal-finance
+      TIMESCALEDB_TELEMETRY: "off"
+      TS_TUNE_MEMORY: "1GB"
+      TS_TUNE_NUM_CPUS: 2
+      TS_TUNE_MAX_CONNS: 50
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == vmi2031883.contaboserver.net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.tcp.routers.database-pf.rule=HostSNI(`pf.venda.plus`)
+      - traefik.tcp.routers.database-pf.entrypoints=timescale
+      - traefik.tcp.routers.database-pf.tls=true
+      - traefik.tcp.routers.database-pf.tls.certresolver=le
+      - traefik.tcp.routers.database-pf.domains[0].main=pf.venda.plus
+      - traefik.tcp.routers.database-pf.service=database-pf
+      - traefik.tcp.services.database-pf.loadbalancer.server.port=5432
+
+  back:
+    image: ghcr.io/imersaoavancada/personal-finance:0.0.1
+    networks:
+      - pf-internal
+      - traefik-public
+    secrets:
+      - PFI_DB_PASSWORD
+    deploy:
+      mode: replicated
+      replicas: 1
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.back-pf-http.rule=Host(`pf.venda.plus`)
+      - traefik.http.routers.back-pf-http.entrypoints=http
+      - traefik.http.routers.back-pf-http.middlewares=https-redirect
+      - traefik.http.routers.back-pf-http.service=back-pf
+
+      - traefik.http.routers.back-pf-https.rule=Host(`pf.venda.plus`)
+      - traefik.http.routers.back-pf-https.entrypoints=https
+      - traefik.http.routers.back-pf-https.tls=true
+      - traefik.http.routers.back-pf-https.tls.certresolver=le
+      - traefik.http.routers.back-pf-https.service=back-pf
+      - traefik.tcp.services.back-pf.loadbalancer.server.port=8080

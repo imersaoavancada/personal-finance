@@ -34,19 +34,19 @@ services:
       placement:
         constraints:
           - node.hostname == vmi2031883.contaboserver.net
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.tcp.routers.database-pf.rule=HostSNI(`pf.venda.plus`)
-      - traefik.tcp.routers.database-pf.entrypoints=timescale
-      - traefik.tcp.routers.database-pf.tls=true
-      - traefik.tcp.routers.database-pf.tls.certresolver=le
-      - traefik.tcp.routers.database-pf.domains[0].main=pf.venda.plus
-      - traefik.tcp.routers.database-pf.service=database-pf
-      - traefik.tcp.services.database-pf.loadbalancer.server.port=5432
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.tcp.routers.database-pf.rule=HostSNI(`pf.venda.plus`)
+        - traefik.tcp.routers.database-pf.entrypoints=timescale
+        - traefik.tcp.routers.database-pf.tls=true
+        - traefik.tcp.routers.database-pf.tls.certresolver=le
+        - traefik.tcp.routers.database-pf.tls.domains[0].main=pf.venda.plus
+        - traefik.tcp.routers.database-pf.service=database-pf
+        - traefik.tcp.services.database-pf.loadbalancer.server.port=5432
 
   back:
-    image: ghcr.io/imersaoavancada/personal-finance:0.0.1
+    image: ghcr.io/imersaoavancada/personal-finance:0.0.2
     networks:
       - pf-internal
       - traefik-public
@@ -55,17 +55,17 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.http.routers.back-pf-http.rule=Host(`pf.venda.plus`)
-      - traefik.http.routers.back-pf-http.entrypoints=http
-      - traefik.http.routers.back-pf-http.middlewares=https-redirect
-      - traefik.http.routers.back-pf-http.service=back-pf
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.http.routers.back-pf-http.rule=Host(`pf.venda.plus`)
+        - traefik.http.routers.back-pf-http.entrypoints=http
+        - traefik.http.routers.back-pf-http.middlewares=https-redirect
+        - traefik.http.routers.back-pf-http.service=back-pf
 
-      - traefik.http.routers.back-pf-https.rule=Host(`pf.venda.plus`)
-      - traefik.http.routers.back-pf-https.entrypoints=https
-      - traefik.http.routers.back-pf-https.tls=true
-      - traefik.http.routers.back-pf-https.tls.certresolver=le
-      - traefik.http.routers.back-pf-https.service=back-pf
-      - traefik.tcp.services.back-pf.loadbalancer.server.port=8080
+        - traefik.http.routers.back-pf-https.rule=Host(`pf.venda.plus`)
+        - traefik.http.routers.back-pf-https.entrypoints=https
+        - traefik.http.routers.back-pf-https.tls=true
+        - traefik.http.routers.back-pf-https.tls.certresolver=le
+        - traefik.http.routers.back-pf-https.service=back-pf
+        - traefik.http.services.back-pf.loadbalancer.server.port=8080
